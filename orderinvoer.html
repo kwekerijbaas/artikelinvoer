@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kwekerijbaas — Verkooporderinvoer (Microsoft BC)</title>
+<style>
+:root {
+  --groen:#2e7d32; --groen-licht:#e8f5e9; --groen-dark:#1b5e20;
+  --oranje:#ef6c00; --rood:#c62828; --blauw:#1565c0;
+  --grijs:#f5f5f5; --border:#ccc; --font:'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--grijs);color:#333}
+
+header{
+  background:linear-gradient(135deg,var(--groen-dark),var(--groen));
+  color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between
+}
+header h1{font-size:1.2rem;font-weight:600}
+header .sub{opacity:.8;font-size:.8rem}
+.header-stats{display:flex;gap:16px;font-size:.85rem}
+.header-stats span{background:rgba(255,255,255,.15);padding:4px 12px;border-radius:12px}
+
+.container{max-width:1400px;margin:16px auto;padding:0 16px}
+
+.tabs{display:flex;gap:3px}
+.tab{
+  padding:9px 18px;background:#ddd;border:1px solid var(--border);
+  border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;
+  font-size:.85rem;font-weight:500;transition:all .15s
+}
+.tab.active{background:#fff;border-bottom-color:#fff;color:var(--groen-dark);font-weight:700}
+.tab:hover:not(.active){background:#e8e8e8}
+
+.panel{display:none;background:#fff;border:1px solid var(--border);border-radius:0 6px 6px 6px;padding:18px}
+.panel.active{display:block}
+
+.order-title{
+  display:flex;align-items:center;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);
+  margin-bottom:14px
+}
+.order-title .label{font-size:.78rem;color:#666;text-transform:uppercase;letter-spacing:.6px}
+.order-title input{
+  font-size:1.4rem;font-weight:700;color:var(--groen-dark);border:none;
+  border-bottom:2px solid transparent;padding:2px 4px;font-family:var(--font);width:200px
+}
+.order-title input:focus{outline:none;border-bottom-color:var(--groen)}
+
+.kop-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.kop-col{display:flex;flex-direction:column;gap:8px}
+.kop-block{background:#fafafa;border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.kop-block h4{
+  font-size:.78rem;font-weight:700;color:var(--groen-dark);
+  margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--groen-licht);
+  text-transform:uppercase;letter-spacing:.5px
+}
+.field{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin-bottom:5px}
+.field.req label::after{content:' *';color:var(--rood)}
+.field label{font-size:.78rem;color:#555}
+.field input,.field select,.field textarea{
+  padding:5px 7px;border:1px solid var(--border);border-radius:3px;
+  font-size:.82rem;font-family:var(--font);width:100%
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--groen);box-shadow:0 0 0 2px var(--groen-licht)
+}
+.field input[readonly]{background:#f0f0f0;color:#666}
+.field-row{display:flex;gap:4px}
+.field-row > *{flex:1}
+.btn-add-inline{
+  width:28px;height:28px;border:1px solid var(--groen);background:var(--groen-licht);
+  color:var(--groen);border-radius:3px;cursor:pointer;font-size:1rem;font-weight:700;
+  flex:0 0 28px;line-height:1
+}
+.btn-add-inline:hover{background:var(--groen);color:#fff}
+
+.section-title{
+  font-size:.95rem;font-weight:700;color:var(--groen-dark);
+  margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--groen-licht);
+  display:flex;align-items:center;justify-content:space-between
+}
+
+.lines-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:6px}
+.lines-table{border-collapse:collapse;font-size:.78rem;min-width:100%}
+.lines-table th{
+  background:var(--groen);color:#fff;padding:6px 5px;
+  text-align:left;font-weight:600;font-size:.72rem;white-space:nowrap;
+  position:sticky;top:0;z-index:1
+}
+.lines-table td{padding:3px;border-bottom:1px solid #eee;vertical-align:middle}
+.lines-table input,.lines-table select{
+  padding:4px 5px;border:1px solid var(--border);border-radius:3px;
+  font-size:.78rem;font-family:var(--font);background:#fff
+}
+.lines-table tr:hover td{background:var(--groen-licht)}
+.line-total{font-weight:700;color:var(--groen-dark);text-align:right;padding:5px 8px!important;white-space:nowrap}
+.col-num input{width:60px;text-align:right}
+.col-art input{width:120px}
+.col-text input{width:130px}
+.col-text-wide input{width:200px}
+.col-date input{width:115px}
+.col-pct input{width:60px;text-align:right}
+
+.totals{
+  margin-top:14px;display:flex;justify-content:flex-end;gap:24px;
+  padding:10px 14px;background:var(--groen-licht);border-radius:6px;
+  font-weight:600;color:var(--groen-dark)
+}
+.totals .lbl{color:#555;font-weight:500;margin-right:6px}
+
+.btn-row{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  padding:7px 16px;border:none;border-radius:5px;
+  font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s
+}
+.btn-primary{background:var(--groen);color:#fff}
+.btn-primary:hover{background:var(--groen-dark)}
+.btn-secondary{background:#e0e0e0;color:#333}
+.btn-secondary:hover{background:#ccc}
+.btn-export{background:var(--oranje);color:#fff}
+.btn-export:hover{background:#e65100}
+.btn-danger{background:var(--rood);color:#fff}
+.btn-danger:hover{background:#b71c1c}
+.btn-edit{background:var(--blauw);color:#fff;padding:3px 8px;font-size:.72rem}
+.btn-sm{padding:4px 10px;font-size:.72rem}
+
+.orders-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:8px}
+.orders-table th{
+  background:var(--groen);color:#fff;padding:7px 5px;
+  text-align:left;font-weight:600;cursor:pointer;user-select:none
+}
+.orders-table th:hover{background:var(--groen-dark)}
+.orders-table td{padding:6px;border-bottom:1px solid #eee}
+.orders-table tr:hover td{background:var(--groen-licht)}
+
+.import-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  font-size:.82rem;color:#666;flex-wrap:wrap
+}
+.import-row label{cursor:pointer;color:var(--blauw);text-decoration:underline}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.72rem;font-weight:600;background:#e0e0e0}
+.badge-ok{background:#c8e6c9;color:#2e7d32}
+
+.modal-bg{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;
+  align-items:center;justify-content:center
+}
+.modal-bg.show{display:flex}
+.modal{
+  background:#fff;border-radius:10px;padding:24px;width:520px;max-width:90vw;
+  max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)
+}
+.modal h3{margin-bottom:12px;color:var(--groen-dark)}
+.modal label{font-size:.74rem;font-weight:600;color:#555;text-transform:uppercase;display:block;margin:7px 0 3px;letter-spacing:.4px}
+.modal input{
+  width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:4px;
+  font-size:.85rem
+}
+
+.toast{
+  position:fixed;bottom:20px;right:20px;background:var(--groen-dark);
+  color:#fff;padding:10px 18px;border-radius:8px;font-weight:500;
+  opacity:0;transition:opacity .3s;z-index:999;font-size:.85rem
+}
+.toast.show{opacity:1}
+
+.help{
+  background:#fff8e1;border-left:3px solid var(--oranje);
+  padding:10px 14px;margin-bottom:14px;font-size:.8rem;color:#5d4037;border-radius:4px
+}
+.help b{color:#3e2723}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Kwekerijbaas — Verkooporderinvoer</h1>
+    <div class="sub">Microsoft Business Central &middot; export RapidStart XML / Excel-CSV</div>
+  </div>
+  <div class="header-stats">
+    <span id="stat-orders">0 orders</span>
+    <span id="stat-lines">0 regels</span>
+    <span id="stat-art">0 artikelen geladen</span>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('invoer')">Nieuwe order</div>
+    <div class="tab" onclick="showTab('lijst')">Orderlijst</div>
+    <div class="tab" onclick="showTab('klanten')">Klanten</div>
+  </div>
+
+  <!-- TAB 1: ORDERINVOER -->
+  <div class="panel active" id="panel-invoer">
+    <div class="help">
+      <b>Tip:</b> Importeer eerst je artikellijst (JSON-export uit Artikelinvoer) en voeg klanten toe.
+      Velden volgen de standaard BC verkooporder-layout (kop + regels). Export levert een RapidStart XML
+      en/of Excel-compatibele CSV met de exacte BC kolomnamen.
+    </div>
+
+    <div class="order-title">
+      <span class="label">Verkooporder</span>
+      <input type="text" id="f-ordernr" placeholder="VOR26-XXXXX">
+      <span class="label" style="margin-left:auto">Boekingsomschrijving</span>
+      <input type="text" id="f-boekomschr" readonly style="font-size:.85rem;font-weight:500;color:#333;width:240px">
+    </div>
+
+    <div class="kop-grid">
+      <!-- Kolom 1: Klant + Verkoopadres + Contact -->
+      <div class="kop-col">
+        <div class="kop-block">
+          <h4>Klant</h4>
+          <div class="field">
+            <label>Klantnr.</label>
+            <div class="field-row">
+              <select id="f-klantnr" onchange="onKlantChange()"><option value="">— Kies —</option></select>
+              <button class="btn-add-inline" onclick="openKlantModal()" title="Nieuwe klant">+</button>
+            </div>
+          </div>
+          <div class="field req"><label>Klantnaam</label><input type="text" id="f-klantnaam"></div>
+          <div class="field"><label>Contactpersoonnr.</label><input type="text" id="f-contactnr"></div>
+          <div class="field"><label>Contact</label><input type="text" id="f-contact"></div>
+          <div class="field"><label>Telefoon</label><input type="text" id="f-telefoon"></div>
+          <div class="field"><label>Mobiele telefoon</label><input type="text" id="f-mobiel"></div>
+          <div class="field"><label>E-mailadres</label><input type="email" id="f-email"></div>
+        </div>
+
+        <div class="kop-block">
+          <h4>Verkoopadres</h4>
+          <div class="field"><label>Adres</label><input type="text" id="f-adres"></div>
+          <div class="field"><label>Adres 2</label><input type="text" id="f-adres2"></div>
+          <div class="field"><label>Postcode</label><input type="text" id="f-postcode"></div>
+          <div class="field"><label>Plaats</label><input type="text" id="f-plaats"></div>
+          <div class="field"><label>Land/regio-code</label><input type="text" id="f-land" value="NL" maxlength="3"></div>
+        </div>
+      </div>
+
+      <!-- Kolom 2: Datums -->
+      <div class="kop-col">
+        <div class="kop-block">
+          <h4>Datums</h4>
+          <div class="field"><label>Documentdatum</label><input type="date" id="f-docdatum" onchange="syncDates()"></div>
+          <div class="field"><label>Boekingsdatum</label><input type="date" id="f-boekdatum"></div>
+          <div class="field"><label>Btw-datum</label><input type="date" id="f-btwdatum"></div>
+          <div class="field"><label>Vervaldatum</label><input type="date" id="f-vervaldatum"></div>
+          <div class="field"><label>Orderdatum</label><input type="date" id="f-orderdatum"></div>
+          <div class="field"><label>Ordertijd</label><input type="time" id="f-ordertijd" step="1"></div>
+        </div>
+
+        <div class="kop-block">
+          <h4>Toegezegde leverdatum / -tijd</h4>
+          <div class="field"><label>Toegezegde leverdatum</label><input type="date" id="f-toeglev"></div>
+          <div class="field"><label>Levertijd</label><input type="time" id="f-levertijd"></div>
+        </div>
+
+        <div class="kop-block">
+          <h4>Interne leverdatum / -tijd</h4>
+          <div class="field req"><label>Interne leverdatum</label><input type="date" id="f-internlev"></div>
+          <div class="field req"><label>Interne levertijd</label><input type="time" id="f-internlevtijd"></div>
+        </div>
+      </div>
+
+      <!-- Kolom 3: Referentie + Status -->
+      <div class="kop-col">
+        <div class="kop-block">
+          <h4>Referentie / Proces</h4>
+          <div class="field"><label>Extern documentnr.</label><input type="text" id="f-extdoc"></div>
+          <div class="field"><label>Uw referentie</label><input type="text" id="f-uwref"></div>
+          <div class="field"><label>Verkoper</label><input type="text" id="f-verkoper"></div>
+          <div class="field"><label>Locatiecode</label><input type="text" id="f-loccode"></div>
+          <div class="field"><label>Eindklantnr.</label><input type="text" id="f-eindklant"></div>
+          <div class="field"><label>Eindklantnaam</label><input type="text" id="f-eindklantnaam"></div>
+          <div class="field"><label>Depotcode</label><input type="text" id="f-depotcode"></div>
+          <div class="field"><label>Depotnaam</label><input type="text" id="f-depotnaam"></div>
+          <div class="field"><label>Laadbeleid</label>
+            <select id="f-laadbeleid">
+              <option>Geen</option><option>Standaard</option><option>Per ladingdrager</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="kop-block">
+          <h4>Status</h4>
+          <div class="field"><label>Status</label>
+            <select id="f-status">
+              <option>Open</option><option>Vrijgegeven</option><option>In afwachting van goedk.</option><option>Gefactureerd</option>
+            </select>
+          </div>
+          <div class="field"><label>Statuscode</label><input type="text" id="f-statuscode"></div>
+          <div class="field"><label>Afleverplaats</label><input type="text" id="f-afleverplaats"></div>
+          <div class="field"><label>Orderbevestiging</label><input type="text" id="f-orderbev"></div>
+          <div class="field"><label>Opmerkingen</label><textarea id="f-opmerkingen" rows="2"></textarea></div>
+          <div class="field"><label>Beschrijving van werk</label><textarea id="f-werkomschr" rows="2"></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <span>Orderregels</span>
+      <button class="btn btn-secondary btn-sm" onclick="addLine()">+ Regel toevoegen</button>
+    </div>
+    <div class="lines-wrap">
+      <table class="lines-table" id="lines-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Soort</th>
+            <th>Nr.</th>
+            <th>Variant</th>
+            <th>Geslacht</th>
+            <th>Omschrijving</th>
+            <th>Aantal</th>
+            <th>Eenheid</th>
+            <th>Eenheidsprijs</th>
+            <th>Reg.kort.%</th>
+            <th>Regelbedrag</th>
+            <th>Locatie</th>
+            <th>Potcode</th>
+            <th>Fustcode</th>
+            <th>Aant./fust</th>
+            <th>Hoes</th>
+            <th>Sticker</th>
+            <th>Etiket</th>
+            <th>Verzenddatum</th>
+            <th>Eindklant</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="lines-body"></tbody>
+      </table>
+    </div>
+
+    <div class="totals">
+      <div><span class="lbl">Regels:</span><span id="t-lines">0</span></div>
+      <div><span class="lbl">Totaal aantal:</span><span id="t-qty">0</span></div>
+      <div><span class="lbl">Totaalbedrag:</span><span id="t-amount">€ 0,00</span></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveOrder()">Order opslaan</button>
+      <button class="btn btn-secondary" onclick="resetForm()">Wissen</button>
+      <button class="btn btn-export" onclick="exportCurrentXML()">BC XML</button>
+      <button class="btn btn-export" onclick="exportCurrentRegelsCSV()">Regels CSV (Excel)</button>
+    </div>
+  </div>
+
+  <!-- TAB 2: ORDERLIJST -->
+  <div class="panel" id="panel-lijst">
+    <div class="import-row">
+      <span id="art-status" class="badge">Geen artikellijst geladen</span>
+      <input type="file" id="import-art" accept=".json" style="display:none" onchange="importArtikelen(event)">
+      <label for="import-art">Artikellijst importeren (JSON uit Artikelinvoer)</label>
+      <span style="margin-left:auto"></span>
+      <input type="file" id="import-orders" accept=".json" style="display:none" onchange="importOrders(event)">
+      <label for="import-orders">Orders importeren</label>
+      <button class="btn btn-secondary btn-sm" onclick="exportOrdersJSON()">Orders backup (JSON)</button>
+    </div>
+
+    <table class="orders-table" id="orders-table">
+      <thead>
+        <tr>
+          <th onclick="sortOrders('ordernr')">Ordernr</th>
+          <th onclick="sortOrders('klantNr')">Klantnr</th>
+          <th onclick="sortOrders('klantNaam')">Klantnaam</th>
+          <th onclick="sortOrders('orderdatum')">Orderdatum</th>
+          <th onclick="sortOrders('internlev')">Interne leverdatum</th>
+          <th>Regels</th>
+          <th>Totaal</th>
+          <th>Status</th>
+          <th>Acties</th>
+        </tr>
+      </thead>
+      <tbody id="orders-body"></tbody>
+    </table>
+
+    <div class="btn-row">
+      <button class="btn btn-export" onclick="exportAllXML()">BC XML (alle orders)</button>
+      <button class="btn btn-export" onclick="exportAllRegelsCSV()">Regels CSV — alle orders</button>
+    </div>
+  </div>
+
+  <!-- TAB 3: KLANTEN -->
+  <div class="panel" id="panel-klanten">
+    <div class="btn-row" style="margin-top:0;margin-bottom:10px">
+      <button class="btn btn-primary btn-sm" onclick="openKlantModal()">+ Nieuwe klant</button>
+      <input type="file" id="import-klanten" accept=".json" style="display:none" onchange="importKlanten(event)">
+      <label for="import-klanten" style="cursor:pointer;color:var(--blauw);text-decoration:underline;font-size:.82rem;align-self:center">Klanten importeren</label>
+      <button class="btn btn-secondary btn-sm" onclick="exportKlantenJSON()">Klanten backup</button>
+    </div>
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>Nr</th><th>Naam</th><th>Adres</th><th>Postcode</th><th>Plaats</th><th>Land</th><th>Contact</th><th>Telefoon</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="klanten-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal nieuwe/bewerk klant -->
+<div class="modal-bg" id="modal-klant">
+  <div class="modal">
+    <h3 id="modal-klant-title">Nieuwe klant</h3>
+    <label>Klantnr *</label><input type="text" id="m-klant-nr">
+    <label>Naam *</label><input type="text" id="m-klant-naam">
+    <label>Adres</label><input type="text" id="m-klant-adres">
+    <label>Adres 2</label><input type="text" id="m-klant-adres2">
+    <label>Postcode</label><input type="text" id="m-klant-postcode">
+    <label>Plaats</label><input type="text" id="m-klant-plaats">
+    <label>Landcode</label><input type="text" id="m-klant-land" value="NL" maxlength="3">
+    <label>Contactpersoonnr.</label><input type="text" id="m-klant-contactnr">
+    <label>Contact (naam)</label><input type="text" id="m-klant-contact">
+    <label>Telefoon</label><input type="text" id="m-klant-tel">
+    <label>Mobiele telefoon</label><input type="text" id="m-klant-mobiel">
+    <label>E-mailadres</label><input type="email" id="m-klant-email">
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveKlant()">Opslaan</button>
+      <button class="btn btn-secondary" onclick="closeKlantModal()">Annuleren</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="artnr-list"></datalist>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ---------- State ----------
+let artikelen = [];
+let klanten = [];
+let orders = [];
+let editingOrderId = null;
+let editingKlantNr = null;
+let sortKey = 'ordernr', sortDir = -1;
+
+// Header form fields (id -> property name on order kop)
+const KOP_FIELDS = [
+  ['f-ordernr','ordernr'],['f-boekomschr','boekingsomschrijving'],
+  ['f-klantnr','klantNr'],['f-klantnaam','klantNaam'],
+  ['f-contactnr','contactnr'],['f-contact','contact'],
+  ['f-telefoon','telefoon'],['f-mobiel','mobiel'],['f-email','email'],
+  ['f-adres','adres'],['f-adres2','adres2'],
+  ['f-postcode','postcode'],['f-plaats','plaats'],['f-land','land'],
+  ['f-docdatum','documentdatum'],['f-boekdatum','boekingsdatum'],['f-btwdatum','btwdatum'],
+  ['f-vervaldatum','vervaldatum'],
+  ['f-orderdatum','orderdatum'],['f-ordertijd','ordertijd'],
+  ['f-toeglev','toegezegdeleverdatum'],['f-levertijd','levertijd'],
+  ['f-internlev','internlev'],['f-internlevtijd','internlevtijd'],
+  ['f-extdoc','externdocumentnr'],['f-uwref','uwreferentie'],
+  ['f-verkoper','verkoper'],['f-loccode','locatiecode'],
+  ['f-eindklant','eindklantnr'],['f-eindklantnaam','eindklantnaam'],
+  ['f-depotcode','depotcode'],['f-depotnaam','depotnaam'],
+  ['f-laadbeleid','laadbeleid'],
+  ['f-status','status'],['f-statuscode','statuscode'],
+  ['f-afleverplaats','afleverplaats'],['f-orderbev','orderbevestiging'],
+  ['f-opmerkingen','opmerkingen'],['f-werkomschr','werkomschr']
+];
+
+// Line column config: [css class on cell, dataKey, html factory]
+const LINE_COLS = [
+  ['col-text', 'soort', () => `<select class="l-soort"><option>Artikel</option><option>G/L-rekening</option><option>Vaste activa</option><option>Tekst</option></select>`],
+  ['col-art',  'artikelnr', () => `<input type="text" class="l-artnr" list="artnr-list" oninput="onLineArtnrChange(this)">`],
+  ['col-text', 'variant',   () => `<input type="text" class="l-variant">`],
+  ['col-text', 'geslacht',  () => `<input type="text" class="l-geslacht">`],
+  ['col-text-wide','omschrijving', () => `<input type="text" class="l-omschr">`],
+  ['col-num',  'aantal',    () => `<input type="number" class="l-aantal" min="0" step="1" value="1" oninput="recalc()">`],
+  ['col-text', 'eenheid',   () => `<input type="text" class="l-eenheid" value="STUKS">`],
+  ['col-num',  'prijs',     () => `<input type="number" class="l-prijs" min="0" step="0.01" value="0" oninput="recalc()">`],
+  ['col-pct',  'kortingPct',() => `<input type="number" class="l-korting" min="0" max="100" step="0.01" value="0" oninput="recalc()">`],
+  // regelbedrag is calculated, not an editable input
+  [null,       null,        null],
+  ['col-text', 'locatiecode', () => `<input type="text" class="l-loccode">`],
+  ['col-text', 'potcode',     () => `<input type="text" class="l-potcode">`],
+  ['col-text', 'fustcode',    () => `<input type="text" class="l-fustcode">`],
+  ['col-num',  'aantalPerFust', () => `<input type="number" class="l-aanperfust" min="0" step="1">`],
+  ['col-text', 'hoescode',    () => `<input type="text" class="l-hoescode">`],
+  ['col-text', 'stickercode', () => `<input type="text" class="l-stickercode">`],
+  ['col-text', 'etiket',      () => `<input type="text" class="l-etiket">`],
+  ['col-date', 'verzenddatum', () => `<input type="date" class="l-verzenddatum">`],
+  ['col-text', 'eindklantnr',  () => `<input type="text" class="l-eindklant">`]
+];
+
+// Map line dataKey -> dom class for set/get
+const LINE_DOM = {
+  soort:'.l-soort', artikelnr:'.l-artnr', variant:'.l-variant', geslacht:'.l-geslacht',
+  omschrijving:'.l-omschr', aantal:'.l-aantal', eenheid:'.l-eenheid', prijs:'.l-prijs',
+  kortingPct:'.l-korting', locatiecode:'.l-loccode', potcode:'.l-potcode',
+  fustcode:'.l-fustcode', aantalPerFust:'.l-aanperfust', hoescode:'.l-hoescode',
+  stickercode:'.l-stickercode', etiket:'.l-etiket', verzenddatum:'.l-verzenddatum',
+  eindklantnr:'.l-eindklant'
+};
+
+// ---------- Helpers ----------
+const $ = id => document.getElementById(id);
+const today = () => new Date().toISOString().slice(0,10);
+const nowTime = () => new Date().toTimeString().slice(0,8);
+const yearSuffix = () => String(new Date().getFullYear()).slice(-2);
+const uid = () => 'O' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const fmtMoney = n => '€ ' + (n||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const xmlEsc = v => esc(v).replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function dl(content, name, type) {
+  const blob = new Blob([content], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// Sanitize a Dutch field name to a valid XML element
+function xmlName(s) {
+  return s.replace(/[\s.\/%-]/g,'_').replace(/[^A-Za-z0-9_]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+}
+
+// ---------- Order lines ----------
+function addLine(data) {
+  const tbody = $('lines-body');
+  const tr = document.createElement('tr');
+  const idx = tbody.children.length + 1;
+  let cells = `<td>${idx}</td>`;
+  for (const [cls, , factory] of LINE_COLS) {
+    if (!cls) {
+      cells += `<td class="line-total" data-total>€ 0,00</td>`;
+    } else {
+      cells += `<td class="${cls}">${factory()}</td>`;
+    }
+  }
+  cells += `<td><button class="btn btn-danger btn-sm" onclick="removeLine(this)">×</button></td>`;
+  tr.innerHTML = cells;
+  tbody.appendChild(tr);
+  if (data) {
+    for (const [key, sel] of Object.entries(LINE_DOM)) {
+      const el = tr.querySelector(sel);
+      if (el && data[key] != null && data[key] !== '') el.value = data[key];
+    }
+  }
+  recalc();
+}
+
+function removeLine(btn) {
+  btn.closest('tr').remove();
+  reindexLines();
+  recalc();
+}
+
+function reindexLines() {
+  [...document.querySelectorAll('#lines-body tr')].forEach((tr,i) => {
+    tr.firstElementChild.textContent = i + 1;
+  });
+}
+
+function onLineArtnrChange(input) {
+  const tr = input.closest('tr');
+  const art = artikelen.find(a => a.artikelnr === input.value);
+  if (art) {
+    if (!tr.querySelector('.l-omschr').value) tr.querySelector('.l-omschr').value = art.naam || '';
+    if (art.eenheid && !tr.querySelector('.l-eenheid').value) tr.querySelector('.l-eenheid').value = art.eenheid;
+    if (art.geslacht && !tr.querySelector('.l-geslacht').value) tr.querySelector('.l-geslacht').value = art.geslacht;
+    if (art.potmaat && !tr.querySelector('.l-potcode').value) tr.querySelector('.l-potcode').value = art.potmaat;
+  }
+}
+
+function recalc() {
+  let totalQty = 0, totalAmt = 0, lines = 0;
+  document.querySelectorAll('#lines-body tr').forEach(tr => {
+    const q = +tr.querySelector('.l-aantal').value || 0;
+    const p = +tr.querySelector('.l-prijs').value || 0;
+    const k = +tr.querySelector('.l-korting').value || 0;
+    const total = q * p * (1 - k/100);
+    tr.querySelector('[data-total]').textContent = fmtMoney(total);
+    if (q > 0 || p > 0) lines++;
+    totalQty += q; totalAmt += total;
+  });
+  $('t-lines').textContent = lines;
+  $('t-qty').textContent = totalQty;
+  $('t-amount').textContent = fmtMoney(totalAmt);
+}
+
+// ---------- Klanten ----------
+function fillKlantDropdown() {
+  const sel = $('f-klantnr');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Kies —</option>' +
+    klanten.map(k => `<option value="${esc(k.nr)}">${esc(k.nr)} — ${esc(k.naam)}</option>`).join('');
+  sel.value = cur;
+}
+
+function onKlantChange() {
+  const nr = $('f-klantnr').value;
+  const k = klanten.find(x => x.nr === nr);
+  if (!k) { $('f-klantnaam').value = ''; return; }
+  $('f-klantnaam').value = k.naam || '';
+  $('f-contactnr').value = k.contactnr || '';
+  $('f-contact').value = k.contact || '';
+  $('f-telefoon').value = k.telefoon || '';
+  $('f-mobiel').value = k.mobiel || '';
+  $('f-email').value = k.email || '';
+  $('f-adres').value = k.adres || '';
+  $('f-adres2').value = k.adres2 || '';
+  $('f-postcode').value = k.postcode || '';
+  $('f-plaats').value = k.plaats || '';
+  $('f-land').value = k.land || 'NL';
+}
+
+function openKlantModal(nr) {
+  editingKlantNr = nr || null;
+  const k = nr ? klanten.find(x => x.nr === nr) : null;
+  $('modal-klant-title').textContent = nr ? 'Klant bewerken' : 'Nieuwe klant';
+  $('m-klant-nr').value = k?.nr || '';
+  $('m-klant-nr').readOnly = !!nr;
+  $('m-klant-naam').value = k?.naam || '';
+  $('m-klant-adres').value = k?.adres || '';
+  $('m-klant-adres2').value = k?.adres2 || '';
+  $('m-klant-postcode').value = k?.postcode || '';
+  $('m-klant-plaats').value = k?.plaats || '';
+  $('m-klant-land').value = k?.land || 'NL';
+  $('m-klant-contactnr').value = k?.contactnr || '';
+  $('m-klant-contact').value = k?.contact || '';
+  $('m-klant-tel').value = k?.telefoon || '';
+  $('m-klant-mobiel').value = k?.mobiel || '';
+  $('m-klant-email').value = k?.email || '';
+  $('modal-klant').classList.add('show');
+}
+
+function closeKlantModal() { $('modal-klant').classList.remove('show'); }
+
+function saveKlant() {
+  const nr = $('m-klant-nr').value.trim();
+  const naam = $('m-klant-naam').value.trim();
+  if (!nr || !naam) { toast('Klantnr en naam zijn verplicht'); return; }
+  const data = {
+    nr, naam,
+    adres: $('m-klant-adres').value.trim(),
+    adres2: $('m-klant-adres2').value.trim(),
+    postcode: $('m-klant-postcode').value.trim(),
+    plaats: $('m-klant-plaats').value.trim(),
+    land: $('m-klant-land').value.trim() || 'NL',
+    contactnr: $('m-klant-contactnr').value.trim(),
+    contact: $('m-klant-contact').value.trim(),
+    telefoon: $('m-klant-tel').value.trim(),
+    mobiel: $('m-klant-mobiel').value.trim(),
+    email: $('m-klant-email').value.trim()
+  };
+  if (editingKlantNr) {
+    const idx = klanten.findIndex(k => k.nr === editingKlantNr);
+    klanten[idx] = data;
+  } else {
+    if (klanten.some(k => k.nr === nr)) { toast('Klantnr bestaat al'); return; }
+    klanten.push(data);
+  }
+  closeKlantModal();
+  fillKlantDropdown();
+  renderKlanten();
+  toast('Klant opgeslagen');
+}
+
+function deleteKlant(nr) {
+  if (!confirm('Klant ' + nr + ' verwijderen?')) return;
+  klanten = klanten.filter(k => k.nr !== nr);
+  fillKlantDropdown();
+  renderKlanten();
+}
+
+function renderKlanten() {
+  const tbody = $('klanten-body');
+  tbody.innerHTML = klanten.map(k => `
+    <tr>
+      <td><b>${esc(k.nr)}</b></td>
+      <td>${esc(k.naam)}</td>
+      <td>${esc(k.adres||'')}</td>
+      <td>${esc(k.postcode||'')}</td>
+      <td>${esc(k.plaats||'')}</td>
+      <td>${esc(k.land||'')}</td>
+      <td>${esc(k.contact||'')}</td>
+      <td>${esc(k.telefoon||'')}</td>
+      <td>
+        <button class="btn btn-edit" onclick="openKlantModal('${esc(k.nr)}')">Bewerk</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteKlant('${esc(k.nr)}')">×</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px">Nog geen klanten</td></tr>';
+}
+
+// ---------- Order kop / form glue ----------
+function syncDates() {
+  const d = $('f-docdatum').value;
+  if (!d) return;
+  for (const id of ['f-boekdatum','f-btwdatum','f-orderdatum']) {
+    if (!$(id).value) $(id).value = d;
+  }
+}
+
+function updateBoekomschr() {
+  const nr = $('f-ordernr').value.trim();
+  $('f-boekomschr').value = nr ? 'Order ' + nr : '';
+}
+
+function nextOrderNr() {
+  const prefix = 'VOR' + yearSuffix() + '-';
+  const nums = orders
+    .map(o => (o.ordernr || '').match(/-(\d+)$/))
+    .filter(Boolean).map(m => +m[1]);
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  return prefix + String(next).padStart(5, '0');
+}
+
+function resetForm() {
+  for (const [id] of KOP_FIELDS) { const el = $(id); if (el) el.value = ''; }
+  $('f-ordernr').value = nextOrderNr();
+  $('f-land').value = 'NL';
+  const t = today(), nt = nowTime();
+  $('f-docdatum').value = t;
+  $('f-boekdatum').value = t;
+  $('f-btwdatum').value = t;
+  $('f-orderdatum').value = t;
+  $('f-ordertijd').value = nt;
+  $('f-internlev').value = t;
+  $('f-internlevtijd').value = nt;
+  $('f-laadbeleid').value = 'Geen';
+  $('f-status').value = 'Open';
+  $('lines-body').innerHTML = '';
+  addLine();
+  editingOrderId = null;
+  updateBoekomschr();
+}
+
+function collectKop() {
+  const kop = {};
+  for (const [id, key] of KOP_FIELDS) kop[key] = $(id).value.trim();
+  if (!kop.ordernr) { toast('Ordernr verplicht'); return null; }
+  if (!kop.klantNaam) { toast('Klantnaam verplicht'); return null; }
+  if (!kop.internlev) { toast('Interne leverdatum verplicht'); return null; }
+  if (!kop.internlevtijd) { toast('Interne levertijd verplicht'); return null; }
+  return kop;
+}
+
+function collectLines() {
+  const trs = [...document.querySelectorAll('#lines-body tr')];
+  const lines = trs.map((tr, i) => {
+    const line = { regelnr: (i + 1) * 10000 };
+    for (const [key, sel] of Object.entries(LINE_DOM)) {
+      const el = tr.querySelector(sel);
+      if (!el) continue;
+      const v = el.value.trim();
+      if (key === 'aantal' || key === 'prijs' || key === 'kortingPct' || key === 'aantalPerFust') {
+        line[key] = v === '' ? 0 : +v;
+      } else {
+        line[key] = v;
+      }
+    }
+    line.regelbedrag = +(line.aantal * line.prijs * (1 - (line.kortingPct||0)/100)).toFixed(2);
+    return line;
+  }).filter(l => l.artikelnr || l.aantal > 0 || l.omschrijving);
+  return lines;
+}
+
+function saveOrder() {
+  const kop = collectKop();
+  if (!kop) return;
+  const lines = collectLines();
+  if (!lines.length) { toast('Minstens één regel met artikel of aantal'); return; }
+  for (const l of lines) if (!l.artikelnr) { toast('Regel zonder artikelnr'); return; }
+  const order = { id: editingOrderId || uid(), ...kop, lines };
+  const idx = orders.findIndex(x => x.id === order.id);
+  if (idx >= 0) orders[idx] = order; else orders.push(order);
+  toast('Order ' + order.ordernr + ' opgeslagen');
+  updateStats(); renderOrders(); resetForm();
+}
+
+function editOrder(id) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  showTab('invoer');
+  editingOrderId = id;
+  for (const [domId, key] of KOP_FIELDS) {
+    const el = $(domId); if (!el) continue;
+    el.value = o[key] || '';
+  }
+  updateBoekomschr();
+  $('lines-body').innerHTML = '';
+  o.lines.forEach(l => addLine(l));
+}
+
+function deleteOrder(id) {
+  if (!confirm('Order verwijderen?')) return;
+  orders = orders.filter(o => o.id !== id);
+  updateStats();
+  renderOrders();
+}
+
+function sortOrders(key) {
+  if (sortKey === key) sortDir = -sortDir; else { sortKey = key; sortDir = 1; }
+  renderOrders();
+}
+
+function renderOrders() {
+  const tbody = $('orders-body');
+  const sorted = [...orders].sort((a,b) => {
+    const av = a[sortKey] || '', bv = b[sortKey] || '';
+    return av > bv ? sortDir : av < bv ? -sortDir : 0;
+  });
+  tbody.innerHTML = sorted.map(o => {
+    const totalAmt = o.lines.reduce((s,l) => s + (l.regelbedrag || 0), 0);
+    return `
+    <tr>
+      <td><b>${esc(o.ordernr)}</b></td>
+      <td>${esc(o.klantNr || '')}</td>
+      <td>${esc(o.klantNaam || '')}</td>
+      <td>${esc(o.orderdatum || '')}</td>
+      <td>${esc(o.internlev || '')}</td>
+      <td>${o.lines.length}</td>
+      <td>${fmtMoney(totalAmt)}</td>
+      <td>${esc(o.status || '')}</td>
+      <td>
+        <button class="btn btn-edit" onclick="editOrder('${o.id}')">Bewerk</button>
+        <button class="btn btn-export btn-sm" onclick="exportSingleXML('${o.id}')">XML</button>
+        <button class="btn btn-export btn-sm" onclick="exportSingleRegelsCSV('${o.id}')">CSV</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteOrder('${o.id}')">×</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px">Nog geen orders</td></tr>';
+}
+
+// ---------- Export: BC RapidStart XML ----------
+// Mapping kop -> Dutch BC field captions (sanitized to valid XML names)
+const KOP_XML = [
+  ['ordernr','Nr.'],
+  ['boekingsomschrijving','Boekingsomschrijving'],
+  ['klantNr','Klantnr.'],
+  ['klantNaam','Klantnaam'],
+  ['contactnr','Contactpersoonnr.'],
+  ['contact','Contact'],
+  ['telefoon','Telefoon'],
+  ['mobiel','Mobiele telefoon'],
+  ['email','E-mailadres'],
+  ['adres','Adres'],
+  ['adres2','Adres 2'],
+  ['postcode','Postcode'],
+  ['plaats','Plaats'],
+  ['land','Land/regio-code'],
+  ['documentdatum','Documentdatum'],
+  ['boekingsdatum','Boekingsdatum'],
+  ['btwdatum','Btw-datum'],
+  ['vervaldatum','Vervaldatum'],
+  ['orderdatum','Orderdatum'],
+  ['ordertijd','Ordertijd'],
+  ['toegezegdeleverdatum','Toegezegde leverdatum'],
+  ['levertijd','Levertijd'],
+  ['internlev','Interne Leverdatum'],
+  ['internlevtijd','Interne levertijd'],
+  ['externdocumentnr','Extern documentnr.'],
+  ['uwreferentie','Uw referentie'],
+  ['verkoper','Verkoper'],
+  ['locatiecode','Locatiecode'],
+  ['eindklantnr','Eindklantnr.'],
+  ['eindklantnaam','Eindklantnaam'],
+  ['depotcode','Depotcode'],
+  ['depotnaam','Depotnaam'],
+  ['laadbeleid','Laadbeleid'],
+  ['status','Status'],
+  ['statuscode','Statuscode'],
+  ['afleverplaats','Afleverplaats'],
+  ['orderbevestiging','Orderbevestiging'],
+  ['opmerkingen','Opmerkingen'],
+  ['werkomschr','Beschrijving van werk']
+];
+
+const LINE_XML = [
+  ['regelnr','Regelnr.'],
+  ['soort','Soort'],
+  ['artikelnr','Nr.'],
+  ['variant','Variant'],
+  ['geslacht','Geslacht'],
+  ['omschrijving','Omschrijving'],
+  ['aantal','Aantal'],
+  ['eenheid','Code van eenheid'],
+  ['prijs','Eenheidsprijs'],
+  ['kortingPct','Regelkorting %'],
+  ['regelbedrag','Regelbedrag'],
+  ['locatiecode','Locatiecode'],
+  ['potcode','Potcode'],
+  ['fustcode','Fustcode'],
+  ['aantalPerFust','Aantal per fust'],
+  ['hoescode','Hoescode'],
+  ['stickercode','Stickercode'],
+  ['etiket','Etiket'],
+  ['verzenddatum','Verzenddatum'],
+  ['eindklantnr','Eindklantnr.']
+];
+
+function buildXML(orderList) {
+  const headers = [], lines = [];
+  for (const o of orderList) {
+    const headerFields = KOP_XML.map(([k, caption]) => {
+      const v = o[k];
+      if (v === '' || v == null) return '';
+      return `      <${xmlName(caption)}>${xmlEsc(v)}</${xmlName(caption)}>`;
+    }).filter(Boolean).join('\n');
+    headers.push(
+`    <Sales_Header>
+      <Documenttype>Order</Documenttype>
+${headerFields}
+    </Sales_Header>`);
+    for (const l of o.lines) {
+      const lineFields = LINE_XML.map(([k, caption]) => {
+        const v = l[k];
+        if (v === '' || v == null || (typeof v === 'number' && v === 0 && k !== 'aantal')) return '';
+        return `      <${xmlName(caption)}>${xmlEsc(v)}</${xmlName(caption)}>`;
+      }).filter(Boolean).join('\n');
+      lines.push(
+`    <Sales_Line>
+      <Documenttype>Order</Documenttype>
+      <Documentnr_>${xmlEsc(o.ordernr)}</Documentnr_>
+${lineFields}
+    </Sales_Line>`);
+    }
+  }
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<DataList>
+  <!-- Microsoft Business Central RapidStart Configuration Package
+       Tabellen 36 Sales Header / 37 Sales Line, Documenttype = Order.
+       Gegenereerd door Kwekerijbaas Verkooporderinvoer op ${new Date().toISOString()} -->
+${headers.join('\n')}
+${lines.join('\n')}
+</DataList>
+`;
+}
+
+function exportCurrentXML() {
+  const kop = collectKop(); if (!kop) return;
+  const lines = collectLines();
+  if (!lines.length) { toast('Geen regels'); return; }
+  const xml = buildXML([{...kop, lines}]);
+  dl(xml, `BC_${kop.ordernr}.xml`, 'application/xml');
+}
+
+function exportSingleXML(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  dl(buildXML([o]), `BC_${o.ordernr}.xml`, 'application/xml');
+}
+
+function exportAllXML() {
+  if (!orders.length) { toast('Geen orders'); return; }
+  dl(buildXML(orders), `BC_Orders_${today()}.xml`, 'application/xml');
+}
+
+// ---------- Export: regels CSV in Excel-template formaat ----------
+function csvCell(v) {
+  if (v == null) return '';
+  const s = String(v);
+  return /[",;\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+
+function buildRegelsCSV(orderList) {
+  const cols = [['Documenttype','docType'], ['Documentnr.','docNr']];
+  for (const [k, caption] of LINE_XML) cols.push([caption, k]);
+  const header = cols.map(c => csvCell(c[0])).join(';');
+  const rows = [header];
+  for (const o of orderList) {
+    for (const l of o.lines) {
+      const row = cols.map(([, key]) => {
+        if (key === 'docType') return 'Order';
+        if (key === 'docNr') return o.ordernr;
+        return l[key];
+      });
+      rows.push(row.map(csvCell).join(';'));
+    }
+  }
+  return '﻿' + rows.join('\r\n'); // BOM voor Excel
+}
+
+function exportCurrentRegelsCSV() {
+  const kop = collectKop(); if (!kop) return;
+  const lines = collectLines();
+  if (!lines.length) { toast('Geen regels'); return; }
+  dl(buildRegelsCSV([{...kop, lines}]), `Regels_${kop.ordernr}.csv`, 'text/csv;charset=utf-8');
+}
+
+function exportSingleRegelsCSV(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  dl(buildRegelsCSV([o]), `Regels_${o.ordernr}.csv`, 'text/csv;charset=utf-8');
+}
+
+function exportAllRegelsCSV() {
+  if (!orders.length) { toast('Geen orders'); return; }
+  dl(buildRegelsCSV(orders), `Regels_alle_orders_${today()}.csv`, 'text/csv;charset=utf-8');
+}
+
+// ---------- Import / JSON backup ----------
+function importArtikelen(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const arr = Array.isArray(data) ? data : (data.artikelen || []);
+      artikelen = arr.filter(a => a.artikelnr);
+      refreshArtnrList(); updateStats();
+      toast(artikelen.length + ' artikelen geladen');
+    } catch (err) { toast('Fout: ' + err.message); }
+  };
+  r.readAsText(f); e.target.value = '';
+}
+
+function refreshArtnrList() {
+  const dl = $('artnr-list');
+  dl.innerHTML = artikelen.map(a =>
+    `<option value="${esc(a.artikelnr)}">${esc(a.naam || '')}</option>`).join('');
+  $('art-status').textContent = artikelen.length + ' artikelen geladen';
+  $('art-status').className = 'badge ' + (artikelen.length ? 'badge-ok' : '');
+}
+
+function importOrders(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('Verwacht array');
+      orders = data; updateStats(); renderOrders();
+      toast(orders.length + ' orders geladen');
+    } catch (err) { toast('Fout: ' + err.message); }
+  };
+  r.readAsText(f); e.target.value = '';
+}
+
+function exportOrdersJSON() {
+  dl(JSON.stringify(orders, null, 2), `orders_backup_${today()}.json`, 'application/json');
+}
+
+function importKlanten(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('Verwacht array');
+      klanten = data; fillKlantDropdown(); renderKlanten();
+      toast(klanten.length + ' klanten geladen');
+    } catch (err) { toast('Fout: ' + err.message); }
+  };
+  r.readAsText(f); e.target.value = '';
+}
+
+function exportKlantenJSON() {
+  dl(JSON.stringify(klanten, null, 2), `klanten_backup_${today()}.json`, 'application/json');
+}
+
+// ---------- UI ----------
+function showTab(name) {
+  const tabs = ['invoer','lijst','klanten'];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', tabs[i] === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  $('panel-' + name).classList.add('active');
+  if (name === 'lijst') renderOrders();
+  if (name === 'klanten') renderKlanten();
+}
+
+function updateStats() {
+  $('stat-orders').textContent = orders.length + ' orders';
+  $('stat-lines').textContent = orders.reduce((s,o) => s + o.lines.length, 0) + ' regels';
+  $('stat-art').textContent = artikelen.length + ' artikelen geladen';
+}
+
+// ---------- Init ----------
+$('f-ordernr').addEventListener('input', updateBoekomschr);
+refreshArtnrList();
+fillKlantDropdown();
+resetForm();
+updateStats();
+</script>
+</body>
+</html>

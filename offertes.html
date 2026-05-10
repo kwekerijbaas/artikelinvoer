@@ -256,6 +256,22 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 /* MIX badge in table */
 .mix-badge{display:inline-block;padding:1px 6px;border-radius:9px;font-size:.65rem;font-weight:700;background:#7b1fa2;color:#fff;letter-spacing:.4px}
 
+/* VRC chain + group rows */
+.chain{cursor:pointer;color:#7b1fa2;font-weight:700;margin-right:3px;user-select:none}
+.chain:hover{color:#4a148c}
+.vrc-link{cursor:pointer;text-decoration:none;color:inherit}
+.vrc-link:hover{text-decoration:underline;color:#7b1fa2}
+.tbl tr.group-header td{
+  background:#fff3e0;font-weight:700;color:#bf360c;padding:6px 8px;
+  border-top:2px solid var(--oranje);border-bottom:1px solid #ffcc80;font-size:.78rem
+}
+.tbl tr.group-header td .gh-meta{font-weight:500;color:#555;margin-left:10px;font-size:.72rem}
+.view-toggle{display:inline-flex;gap:0;border:1px solid var(--groen);border-radius:4px;overflow:hidden}
+.view-toggle button{
+  padding:5px 10px;background:#fff;border:none;cursor:pointer;font-size:.78rem;font-weight:600;color:var(--groen-dark)
+}
+.view-toggle button.active{background:var(--groen);color:#fff}
+
 @media (max-width: 1100px) {
   .form-grid{grid-template-columns:1fr 1fr}
   .form-group.span3{grid-column:span 2}
@@ -327,6 +343,13 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
         <select id="f-week-max" onchange="renderTable()"><option value="">—</option></select>
       </div>
       <button class="btn-filter" onclick="resetFilters()">Reset</button>
+      <div>
+        <label>Weergave</label>
+        <div class="view-toggle">
+          <button type="button" id="vt-flat" class="active" onclick="setGroupMode('flat')">Plat</button>
+          <button type="button" id="vt-vrc" onclick="setGroupMode('vrc')">Groepeer op VRC</button>
+        </div>
+      </div>
     </div>
 
     <div class="bulkbar" id="bulkbar">
@@ -378,6 +401,9 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       <button class="btn btn-secondary" onclick="exportJSON()">Exporteer JSON (backup)</button>
       <button class="btn btn-secondary" onclick="document.getElementById('file-import').click()">Importeer JSON</button>
       <button class="btn btn-secondary" onclick="reseed()">Demo data herladen</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('file-master').click()" title="Importeer artikelen uit SharePoint Excel (CSV/JSON/XLSX)">Importeer masterdata…</button>
+      <button class="btn btn-secondary" onclick="clearMaster()" title="Reset masterdata naar ingebouwde set">Reset masterdata</button>
+      <span id="master-status" style="font-size:.78rem;color:#666;align-self:center;margin-left:6px"></span>
     </div>
   </div>
 </div>
@@ -635,6 +661,7 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 <datalist id="dl-verlaaddag"></datalist>
 
 <input type="file" id="file-import" accept=".json" style="display:none" onchange="handleImport(event)">
+<input type="file" id="file-master" accept=".json,.csv,.xlsx,.xls" style="display:none" onchange="handleMasterImport(event)">
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -648,6 +675,7 @@ let regels = (DATA.samples || []).map((r,i) => Object.assign({id: nextId(i)}, r)
 let editingId = null;
 const selectedIds = new Set();
 let sortCol = 'week', sortAsc = true;
+let groupMode = 'flat'; // 'flat' | 'vrc'
 
 function nextId(seed) { return 'r-' + (seed || 0).toString(36) + '-' + Math.random().toString(36).slice(2,7); }
 let __idc = regels.length + 1;
@@ -778,6 +806,8 @@ function renderTable() {
   const truncated = totalAfterFilter > RENDER_LIMIT;
   if (truncated) data = data.slice(0, RENDER_LIMIT);
 
+  const vrcMap = vrcCounts();
+
   const tbody = $('tbl-body');
   const fmt = n => (typeof n === 'number' && n !== 0) ? n.toLocaleString('nl-NL') : '';
   const fmtPrijs = n => (typeof n === 'number' && n !== 0) ? '€ '+n.toFixed(3) : '';
@@ -785,12 +815,17 @@ function renderTable() {
     const v = N(r[k]);
     return '<td class="num cell-edit'+(v<0?' neg':'')+'" data-id="'+r.id+'" data-f="'+k+'">'+(v?fmt(v):'')+'</td>';
   };
-  tbody.innerHTML = data.map(r => {
+  const rowHtml = (r) => {
     const sel = selectedIds.has(r.id) ? ' selected' : '';
     return '<tr class="'+sel.trim()+'">'
       + '<td><input type="checkbox" '+(selectedIds.has(r.id)?'checked':'')+' onchange="toggleSelect(\''+r.id+'\', this.checked)"></td>'
       + '<td><span class="status-badge status-'+esc(r.status||'Z')+'" title="'+esc(statusLabel(r.status))+'">'+esc(r.status||'?')+'</span></td>'
-      + '<td>'+esc(r.vrc)+'</td>'
+      + '<td>'
+        + (r.vrc && vrcMap[r.vrc] > 1
+            ? '<span class="chain" onclick="filterByVrc(\''+esc(r.vrc).replace(/\\?\'/g,"\\\\'")+'\')" title="Deel van VRC ('+vrcMap[r.vrc]+' regels) - klik om te filteren">⛓</span>'
+            : '')
+        + (r.vrc ? '<span class="vrc-link" onclick="filterByVrc(\''+esc(r.vrc).replace(/\\?\'/g,"\\\\'")+'\')">'+esc(r.vrc)+'</span>' : '')
+      + '</td>'
       + '<td>'+esc(r.klant)+'</td>'
       + '<td>'+esc(r.eindklant)+'</td>'
       + '<td>'+esc(r.productgroep)+'</td>'
@@ -818,7 +853,47 @@ function renderTable() {
         + '<button class="btn btn-x" onclick="deleteRow(\''+r.id+'\')" title="Verwijderen">×</button>'
       + '</td>'
     + '</tr>';
-  }).join('');
+  };
+
+  // Render flat or grouped
+  let html = '';
+  if (groupMode === 'vrc') {
+    // Group by VRC (keep current sort order within each group)
+    const groups = new Map();
+    const noVrcKey = '(geen VRC)';
+    data.forEach(r => {
+      const k = r.vrc || noVrcKey;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(r);
+    });
+    // Sort groups: VRC codes alphabetically, geen VRC last
+    const keys = Array.from(groups.keys()).sort((a,b) => {
+      if (a === noVrcKey) return 1; if (b === noVrcKey) return -1;
+      return a.localeCompare(b);
+    });
+    const COL_COUNT = 24;
+    keys.forEach(k => {
+      const grp = groups.get(k);
+      const sumPlanned = grp.reduce((s,r)=>s+N(r.geplande_aantallen),0);
+      const sumKarBruto = grp.reduce((s,r)=>s+N(r.aantal_kar_bruto),0);
+      const sumDayTotal = grp.reduce((s,r)=>s+N(r.afgenomen_totaal),0);
+      const statusCounts = {};
+      grp.forEach(r => { if (r.status) statusCounts[r.status] = (statusCounts[r.status]||0) + 1; });
+      const statusStr = Object.entries(statusCounts).map(([s,c]) => s+':'+c).join(' ');
+      html += '<tr class="group-header"><td colspan="'+COL_COUNT+'">'
+        + '<strong>'+esc(k)+'</strong>'
+        + ' <span class="gh-meta">'+grp.length+' regels'
+        + ' · Geplande: ' + sumPlanned.toLocaleString('nl-NL')
+        + ' · Karren totaal: ' + (Math.round(sumKarBruto*100)/100)
+        + ' · Afgenomen: ' + sumDayTotal.toLocaleString('nl-NL')
+        + (statusStr ? ' · Status: ' + statusStr : '')
+        + '</span></td></tr>';
+      html += grp.map(rowHtml).join('');
+    });
+  } else {
+    html = data.map(rowHtml).join('');
+  }
+  tbody.innerHTML = html;
 
   $('row-count').textContent = truncated
     ? ('Eerste ' + data.length + ' van ' + totalAfterFilter + ' gefilterde regels (totaal ' + regels.length + ') — verfijn filters/zoek voor meer')
@@ -861,6 +936,25 @@ function updateStats() {
 function resetFilters() {
   ['f-search','f-status','f-klant','f-prod','f-verk','f-week-min','f-week-max'].forEach(id => $(id).value = '');
   renderTable();
+}
+
+function setGroupMode(m) {
+  groupMode = m;
+  $('vt-flat').classList.toggle('active', m === 'flat');
+  $('vt-vrc').classList.toggle('active', m === 'vrc');
+  renderTable();
+}
+
+function vrcCounts() {
+  const m = {};
+  regels.forEach(r => { if (r.vrc) m[r.vrc] = (m[r.vrc]||0) + 1; });
+  return m;
+}
+
+function filterByVrc(vrc) {
+  $('f-search').value = vrc;
+  renderTable();
+  toast('Gefilterd op ' + vrc);
 }
 
 /* === SELECTION === */
@@ -1480,6 +1574,161 @@ function reseed() {
   toast('Demo data herladen ('+regels.length+' regels)');
 }
 
+/* === MASTER IMPORT (SharePoint export → app) === */
+const MASTER_KEY = 'offerteapp_master_v1';
+let MASTER_ORIGINAL = MASTER_ARTIKELEN.slice();
+
+function safeLS(action, key, value) {
+  try {
+    if (!window.localStorage) return null;
+    if (action === 'get') return localStorage.getItem(key);
+    if (action === 'set') return localStorage.setItem(key, value);
+    if (action === 'del') return localStorage.removeItem(key);
+  } catch(e) { return null; }
+}
+function refreshMasterStatus() {
+  if (!$('master-status')) return;
+  const saved = safeLS('get', MASTER_KEY);
+  if (saved) {
+    try {
+      const obj = JSON.parse(saved);
+      const when = obj.imported_at ? new Date(obj.imported_at).toLocaleString('nl-NL') : '';
+      $('master-status').textContent = (obj.items && obj.items.length || 0) + ' artikelen geïmporteerd' + (when ? ' op ' + when : '');
+      $('master-status').style.color = 'var(--groen-dark)';
+    } catch(e) { $('master-status').textContent = ''; }
+  } else {
+    $('master-status').textContent = 'Masterdata: ingebouwde set ('+MASTER_ORIGINAL.length+')';
+    $('master-status').style.color = '#666';
+  }
+}
+
+function applyMaster(items, source) {
+  // Replace MASTER_ARTIKELEN in-place (it's const but we mutate the array contents)
+  MASTER_ARTIKELEN.length = 0;
+  items.forEach(a => MASTER_ARTIKELEN.push(a));
+  // Refill picker potmaat options
+  const pots = Array.from(new Set(MASTER_ARTIKELEN.map(a => a.potmaat).filter(Boolean))).sort();
+  const sel = $('picker-pot');
+  sel.innerHTML = '<option value="">Alle potmaten</option>' + pots.map(p => '<option value="'+esc(p)+'">'+esc(p)+'</option>').join('');
+  refreshMasterStatus();
+  toast('Masterdata geladen: '+items.length+' artikelen ('+source+')');
+}
+
+function clearMaster() {
+  if (!confirm('Geïmporteerde masterdata verwijderen en terug naar ingebouwde set?')) return;
+  safeLS('del', MASTER_KEY);
+  applyMaster(MASTER_ORIGINAL.slice(), 'ingebouwd');
+}
+
+function loadMasterFromStorage() {
+  const raw = safeLS('get', MASTER_KEY);
+  if (raw) {
+    try {
+      const obj = JSON.parse(raw);
+      if (Array.isArray(obj.items) && obj.items.length) {
+        MASTER_ARTIKELEN.length = 0;
+        obj.items.forEach(a => MASTER_ARTIKELEN.push(a));
+      }
+    } catch(e) { /* ignore */ }
+  }
+  refreshMasterStatus();
+}
+
+function normalizeMasterRow(o) {
+  // Accept various column-name spellings (Dutch/English, with/without spaces)
+  const get = (...keys) => {
+    for (const k of keys) {
+      const found = Object.keys(o).find(x => x.toLowerCase().replace(/[\s_-]/g,'') === k.toLowerCase().replace(/[\s_-]/g,''));
+      if (found && o[found] != null && String(o[found]).trim() !== '') return String(o[found]).trim();
+    }
+    return '';
+  };
+  return {
+    artikelnr: get('artikelnr','artikelnummer','nr','number','no','artikel','code','itemno'),
+    naam: get('naam','name','omschrijving','description','artikelnaam'),
+    sticker: get('sticker','stickernaam','searchdescription','korteomschrijving'),
+    potmaat: get('potmaat','potsize','pot'),
+    combinatie: get('combinatie','combination','combi','lijn','line'),
+    thema: get('thema','theme','collection'),
+    soort: get('soort','soortcode','species','type'),
+    typekleur: get('typekleur','kleur','color','colour','typecolor'),
+  };
+}
+
+function parseCsvText(text) {
+  // Detect delimiter
+  const firstLine = text.split(/\r?\n/, 1)[0] || '';
+  const delim = (firstLine.match(/;/g)||[]).length >= (firstLine.match(/,/g)||[]).length ? ';' : ',';
+  const rows = [];
+  let cur = []; let field = ''; let q = false; let i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') {
+        if (text[i+1] === '"') { field += '"'; i += 2; continue; }
+        q = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if (c === '"') { q = true; i++; continue; }
+    if (c === delim) { cur.push(field); field = ''; i++; continue; }
+    if (c === '\n' || c === '\r') {
+      cur.push(field); field = ''; rows.push(cur); cur = [];
+      if (c === '\r' && text[i+1] === '\n') i += 2; else i++;
+      continue;
+    }
+    field += c; i++;
+  }
+  if (field !== '' || cur.length) { cur.push(field); rows.push(cur); }
+  // Strip BOM from first cell if present
+  if (rows.length && rows[0].length && rows[0][0].charCodeAt(0) === 0xFEFF) {
+    rows[0][0] = rows[0][0].slice(1);
+  }
+  if (!rows.length) return [];
+  const headers = rows.shift().map(h => h.trim());
+  return rows.filter(r => r.some(c => c && c.trim() !== '')).map(r => {
+    const o = {};
+    headers.forEach((h, idx) => { o[h] = r[idx] != null ? r[idx] : ''; });
+    return o;
+  });
+}
+
+function importMasterFromObjects(objs, sourceName) {
+  const items = objs.map(normalizeMasterRow).filter(a => a.naam || a.artikelnr);
+  if (!items.length) { toast('Geen herkenbare artikelen in het bestand'); return; }
+  safeLS('set', MASTER_KEY, JSON.stringify({imported_at: new Date().toISOString(), source: sourceName, items}));
+  applyMaster(items, sourceName);
+}
+
+function handleMasterImport(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const name = f.name.toLowerCase();
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      if (name.endsWith('.json')) {
+        const obj = JSON.parse(ev.target.result);
+        const arr = Array.isArray(obj) ? obj : (Array.isArray(obj.items) ? obj.items : (Array.isArray(obj.artikelen) ? obj.artikelen : null));
+        if (!arr) { toast('JSON moet een array zijn of {items:[]} bevatten'); return; }
+        importMasterFromObjects(arr, f.name);
+      } else if (name.endsWith('.csv')) {
+        const objs = parseCsvText(ev.target.result);
+        importMasterFromObjects(objs, f.name);
+      } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+        const wb = XLSX.read(new Uint8Array(ev.target.result), {type: 'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const objs = XLSX.utils.sheet_to_json(ws, {defval: ''});
+        importMasterFromObjects(objs, f.name);
+      } else {
+        toast('Onbekend bestandstype — gebruik .csv, .json of .xlsx');
+      }
+    } catch(err) { toast('Fout bij import: '+err.message); console.error(err); }
+  };
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) reader.readAsArrayBuffer(f);
+  else reader.readAsText(f);
+  e.target.value = '';
+}
+
 function dl(content, name, type) {
   const blob = new Blob([content], {type});
   const a = document.createElement('a');
@@ -1541,6 +1790,7 @@ document.addEventListener('keydown', (e) => {
 
 /* === BOOT === */
 initLookups();
+loadMasterFromStorage();
 renderTable();
 </script>
 </body>

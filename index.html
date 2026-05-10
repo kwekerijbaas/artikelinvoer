@@ -223,6 +223,14 @@ select.cell-input{padding:3px 4px;cursor:pointer}
         </div>
       </div>
       <div class="form-group">
+        <label>Teelt</label>
+        <input type="text" id="f-teelt" list="dl-teelt" placeholder="Kies of typ…" autocomplete="off">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>Teeltomschrijving (vrije tekst)</label>
+        <input type="text" id="f-teeltomschrijving" list="dl-teeltomschrijving" placeholder="Kies uit lijst of typ vrije tekst…" autocomplete="off">
+      </div>
+      <div class="form-group">
         <label>Kleurcode (Agriware)</label>
         <select id="f-kleurcode"><option value="">— Optioneel —</option></select>
       </div>
@@ -273,6 +281,8 @@ select.cell-input{padding:3px 4px;cursor:pointer}
           <th onclick="sortBy('thema')">Thema</th>
           <th onclick="sortBy('soort')">Soort</th>
           <th onclick="sortBy('typekleur')">Typekleur</th>
+          <th onclick="sortBy('teelt')">Teelt</th>
+          <th onclick="sortBy('teeltomschrijving')">Teeltomschrijving</th>
           <th onclick="sortBy('naam')">Naam uitgeschreven</th>
           <th onclick="sortBy('sticker')">Stickernaam</th>
           <th onclick="sortBy('artikelnr')">Artikelnr</th>
@@ -328,6 +338,9 @@ select.cell-input{padding:3px 4px;cursor:pointer}
 <!-- Hidden file input for JSON import -->
 <input type="file" id="file-import" accept=".json" style="display:none" onchange="handleImport(event)">
 
+<datalist id="dl-teelt"></datalist>
+<datalist id="dl-teeltomschrijving"></datalist>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -340,7 +353,9 @@ const REF = {
   combinatie: ["Family", "Friends", "Solo"],
   thema: ["Bird", "Birthday", "Blossom", "Calm", "Candy", "Colour", "Cookie", "Dance", "Dream", "Energy", "Fresh", "Fruits", "Garden", "Happiness", "Holiday", "Love", "Magic", "Music", "Ocean", "Pure", "Sea", "Season", "Sun"],
   soort: ["Allium", "Antirrhinum", "Bacopa", "Begonia", "Bel - Vio - Pri", "Bellis", "Bidens & Calibrachoa", "Bolchrysant", "Brachyscome", "Cali - Bac - Brach - Pet - Verb", "Cali - Brach - Cal - Pet - Verb", "Cali - Lob - Cali - Pet - Verb", "Cali - Pet - Lob - Verb - Bac", "Cali - Pet - Verb", "Cali - Verb - Cali - Verb - Pet - Fuch", "Cali - Verb - Pet", "Cali - Verb - Pet - Cali", "Calibrachoa", "Campanula", "Cham - Pelar - Pet - Verb", "Chrysant", "Cornuta", "Cyclaam", "Dahlia", "Dianthus", "Fuch - Verb - Bac - Lys - Pet", "Fuchsia", "Helianthus", "Impatiens", "Lantana", "Lobelia", "Osteospermum", "Pelargonium", "Pet - Lob - Cali - Cali - Bac", "Pet - Verb - Brach - Lob - Cali", "Pet - Verb - Cali", "Petunia", "Petunia & Calibrachoa", "Petunia & Verbena", "Petunia, Verbena, Calibrachoa", "Platycodon", "Poinsettia", "Poinsettie", "Potchrysant", "Salvia", "Salvia & Petunia", "Tagetes", "Verb - Pet - Cali", "Verb - Pet - Pelar - Bac", "Verb - Pet - Pelar - Cali", "Verbena", "Viola", "Viola Coolwave", "Viola F1"],
-  typekleur: ["Blue", "Blue & Yellow", "Blue, white, yellow", "Brons", "Cosmic Pink & Purple", "Daisy", "Dark", "Double Blue & Yellow", "Geel", "Light", "Light blue, white, purple", "MIX", "Orange", "Oranje", "Paars", "Paars, geel, roze", "Paars, wit, roze", "Pink", "Purple", "Purple lavender, light blue", "Purple, white", "Purple/White/Pink", "Purple/Yellow/Pink", "Quintet", "Red", "Red, white, blue", "Red, yellow, blue", "Red/White/Yellow", "Rood", "Rood, paars, rood", "Rood, wit, geel", "Rose, blauw, geel", "Rose, rose, blauw", "Roze", "White", "White & Blue", "White & Pink", "White & Purple", "White & Red", "White & Rose", "Wit", "Wit, blauw, blauw", "Wit, geel, geel", "Wit, roze, paars", "Yellow", "Yellow & Blue", "Yellow & Purple", "Yellow Pink White", "Yellow Pink White Fairtrade", "Yellow Purple White", "Yellow Purple White Fairtrade", "Yellow Red Pink", "Yellow Red Pink Fairtrade", "Yellow Red White", "Yellow Red White Fairtrade", "Yellow yellow/purple yellor/white", "Yellow, lemon, white", "Yellow, purple", "Yellow, white", "Yellow, white, purple", "blauw", "blauw, geel, roze", "blauw, paars", "blauw, paars, roze", "blauw, roze", "blauw, wit", "blauw, wit, paars", "blauw, wit, roze", "geel", "geel, oranje, roze", "geel, wit", "groen", "mix, blauw", "mix, blauw, geel", "mix, blauw, paars", "mix, geel, paars", "mix, oranje", "mix, oranje, roze", "mix, paars, roze", "mix, roze", "mix, wit, roze", "paars, roze", "rood", "rood, blauw, geel", "rood, geel, oranje, roze", "rood, mix", "rood, mix, blauw, paars", "rood, mix, blauw, wit", "rood, mix, wit", "rood, paars roze", "rood, roze", "rood, wit, paars", "rood, wit, roze", "roze", "wit", "wit, paars, roze", "wit, roze", "wit, roze, oranje"]
+  typekleur: ["Blue", "Blue & Yellow", "Blue, white, yellow", "Brons", "Cosmic Pink & Purple", "Daisy", "Dark", "Double Blue & Yellow", "Geel", "Light", "Light blue, white, purple", "MIX", "Orange", "Oranje", "Paars", "Paars, geel, roze", "Paars, wit, roze", "Pink", "Purple", "Purple lavender, light blue", "Purple, white", "Purple/White/Pink", "Purple/Yellow/Pink", "Quintet", "Red", "Red, white, blue", "Red, yellow, blue", "Red/White/Yellow", "Rood", "Rood, paars, rood", "Rood, wit, geel", "Rose, blauw, geel", "Rose, rose, blauw", "Roze", "White", "White & Blue", "White & Pink", "White & Purple", "White & Red", "White & Rose", "Wit", "Wit, blauw, blauw", "Wit, geel, geel", "Wit, roze, paars", "Yellow", "Yellow & Blue", "Yellow & Purple", "Yellow Pink White", "Yellow Pink White Fairtrade", "Yellow Purple White", "Yellow Purple White Fairtrade", "Yellow Red Pink", "Yellow Red Pink Fairtrade", "Yellow Red White", "Yellow Red White Fairtrade", "Yellow yellow/purple yellor/white", "Yellow, lemon, white", "Yellow, purple", "Yellow, white", "Yellow, white, purple", "blauw", "blauw, geel, roze", "blauw, paars", "blauw, paars, roze", "blauw, roze", "blauw, wit", "blauw, wit, paars", "blauw, wit, roze", "geel", "geel, oranje, roze", "geel, wit", "groen", "mix, blauw", "mix, blauw, geel", "mix, blauw, paars", "mix, geel, paars", "mix, oranje", "mix, oranje, roze", "mix, paars, roze", "mix, roze", "mix, wit, roze", "paars, roze", "rood", "rood, blauw, geel", "rood, geel, oranje, roze", "rood, mix", "rood, mix, blauw, paars", "rood, mix, blauw, wit", "rood, mix, wit", "rood, paars roze", "rood, roze", "rood, wit, paars", "rood, wit, roze", "roze", "wit", "wit, paars, roze", "wit, roze", "wit, roze, oranje"],
+  teelt: ["0111217901 - Anemone Emmy Basic Mix P17", "0321106900 - Bellis Per. trio 6P", "0321110900 - Bellis C10N Basic Mix", "0631212900 - Potchrysant P12v13 Basic Mix", "0901212900 - Dahlia P12 Basic Mix", "0921209001 - Dianthus P09 Oscar Basic Mix", "0921209900 - Dianthus P09 Basic Mix", "0921210901 - Dianthus P105 Basic Mix", "0921527901 - Dianthus B27 Pink Kisses Basic Mix", "1301212900 - Fuchsia P12v13 Basic Mix", "1301212901 - Fuchsia P12v13 Bella Basic Mix", "1521214900 - Hydrangea P14 Basic Mix", "2461106900 - Myosotis Trio 6P", "2991210901 - Osteospermum P105 Basic Mix", "3021212900 - Pelar. pelt. P12 Basic Mix", "3031212900 - Pelar. zon. P12 Basic Mix", "3041212900 - Petunia P12v13 Basic Mix", "3041212901 - Petunia P12 Peppy Basic Mix", "3041217900 - Petunia P17 Peppy Basic Mix", "3051212900 - BJ Pet. P12v13 Fotofinish Basic Mix", "3051217900 - BJ Pet. P17 Fotofinish Basic Mix", "3051321900 - Petunia HP21 Basic Mix", "3051327900 - Petunia HP27 Easy W. Basic Mix", "3081312901 - Portulaca P12v13 Basic Mix", "3141212900 - Platycodon P12 Basic Mix", "3151212900 - Paeonia P11v12 Basic Mix", "327008 - HP27 Blooming Joy", "3301212900 - Salvia volm. P12 Farina Basic Mix", "3361327901 - BJ Scaevola HP27 Basic Mix", "3901212900 - Verbena P12 Wicked Basic Mix", "3901217900 - Verbena P17 Wicked Basic Mix", "3911421900 - BJ Viola Coolw. HP21 Basic Mix", "3931106902 - Viola corn. 6P Basic Mix", "3931110900 - Viola corn. C10N Basic Mix", "3931321900 - Viola corn. HP21 Basic Mix", "3941110900 - Viola F1 C10N Basic Mix", "6P Pelargonium", "7201212900 - BJ Cali. P12 Mono Basic Mix vol. P13", "7201212901 - BJ Cali. P12 Trio Basic Mix vol. P13", "7201217900 - BJ Cali. P17 Basic Mix", "7201221901 - BJ Par. P21 Basic Mix", "8501212900 - BJ Par. P12 Trio Basic Mix vol. P13", "8501217900 - BJ Par. P17 Basic Mix", "8501221901 - BJ Cali. P21 Basic Mix", "8501227901 - BJ Stekpg P27 Parade Basic Mix", "8511327901 - BJ Mom Edition HP27 Basic Mix", "9101212960 - BJ Verb. P12 Trio Basic Mix vol. P13", "9631106902 - Zaaiperkgoed 6P Basic Mix", "9631106903 - Stekpg 6P Basic Mix", "9631110900 - Zaaiperkgoed C10N Basic Mix", "9631212901 - BJ Stekpg P12 Basic Mix vol. P13", "9631217900 - BJ Stekpg P17 Basic Mix", "9631327900 - BJ Stekpg HP27 Parade Basic Mix", "9631327902 - BJ Stekpg HP27 Basic Mix", "9631421900 - BJ Stekpg HP21 Basic Mix", "Allium P12v13 Basic Mix", "Angelonia P12 Basic Mix", "Aster P12 Basic Mix", "Aster P17 Basic Mix", "Bellis C10N Basic Mix", "Bellis hab. P12 Basic Mix", "Bijmengen 1 laag x 15 fuchsia 3 lantana en 3 rozen allen 19 cm", "BJ Cali. 6P Basic Mix", "BJ Cali. HP27 Basic Mix", "BJ Cali. P12 Basic Mix", "BJ Cali. P12 Mono Basic Mix vol. P13", "BJ Cali. P12 Trio Basic Mix vol. P13", "BJ Cali. P17 Basic Mix", "BJ Cali. P21 Basic Mix", "BJ Coolw. HP27 Basic Mix", "BJ Coolw. P27 Basic Mix", "BJ Corn. P12 Basic Mix vol. P13", "BJ Corn. P21 Endurio Basic Mix", "BJ Par. 6P Basic Mix", "BJ Par. 6P Trio Basic Mix", "BJ Par. HP21 Basic Mix", "BJ Par. P12 Trio Basic Mix vol. P13", "BJ Par. P17 Basic Mix", "BJ Par. P21 Basic Mix", "BJ Pet. P12v13 Fotofinish Basic Mix", "BJ Pet. P17 Fotofinish Basic Mix", "BJ Primula ac. P12 Basic Mix", "BJ Scaevola HP27 Basic Mix", "BJ Stekpg HP21 Basic Mix", "BJ Stekpg HP27 Basic Mix", "BJ Stekpg HP27 Parade Basic Mix", "BJ Stekpg P12 Basic Mix vol. P13", "BJ Stekpg P17 Basic Mix", "BJ Stekpg P27 Parade Basic Mix", "BJ Trio Coll. P12 Basic Mix", "BJ Verb. HP21 Basic Mix", "BJ Verb. P12 Trio Basic Mix vol. P13", "BJ Verb. P17 Trio Basic Mix", "BJ Viola Coolw. P21 Basic Mix", "BJ Viola corn. Trio P12v13 Basic Mix", "Blooming Joy Perkgoed", "Bollenmix 12 cm kwekerij van Bragt", "Campanula", "Chrysant 6P Basic Mix", "Crasspedia P12", "Cyclaam P12 Basic Mix", "Dahlia P12 Basic Mix", "Dianthus 6P Basic Mix", "Dianthus B27 Pink Kisses Basic Mix", "Dianthus P09 Basic Mix", "Dianthus P12 Basic Mix", "Fuchsia P12v13 Basic Mix", "Fuchsia P12v13 Bella Basic Mix", "Fuchsia P19 bijkoop", "Groene planten mix P12", "Helianthus", "Hydrangea Hugo Paniculata 19 cm", "Hydrangea P19 Basic Mix", "Lavandula P12", "Mysty & Friends P17 Basic Mix", "Pelar. P17 Galaxy Basic Mix", "Pelar. P21 Galaxy Basic Mix", "Petunia 6P Basic Mix", "Petunia HP21 Basic Mix", "Petunia HP27 Basic Mix", "Petunia HP27 Easy W. Basic Mix", "Petunia P12v13 Basic Mix", "Petunia P17 Peppy Basic Mix", "Petunia P17 Sweetunia Basic Mix", "Petunia P21 Sweetunia Basic Mix", "Platycodon P12 Basic Mix", "Portulaca P12v13 Basic Mix", "Potchrysant P11v12 Basic Mix", "Primula 6 p Aldi Mix", "Primula ac. P105 Pom Pom", "Primula sweet kisses", "S21 Basic Mix", "Salvia volm. P12 Farina Basic Mix", "Sedum P12 Basic Mix", "Sedum P17 Basic Mix", "Stekperkgoed HP25 Basic Mix", "Vaste plantenmix", "Vaste plantenmix kw. Scholten", "Verbena 6P Basic Mix", "Verbena P12 Wicked Basic Mix", "Verbena P17 Wicked Basic Mix", "Viola corn. C10N Basic Mix", "Viola Corn. HP27 Basic Mix", "Viola corn. P12 Endurio Basic Mix", "Viola F1 / Cornuta C10N Basic Mix", "Viola F1 C10N Basic Mix", "Zaaiperkgoed 20P Basic Mix", "Zaaiperkgoed C10N Basic Mix", "Zaaiperkgoed P14 Basic Mix"],
+  teeltomschrijving: ["1 laag I Love You, 2 laag Pink kisses, 1 laag Peach Party", "1 laag I Love You, 2 laag Pink kisses, 1 laag Peach Party Spanje factuur", "210005 - P105 Osteospermum Bas de Wilt via FH", "210005 - P105 Osteospermum Bas de Wilt via Fh", "210005 - P105 Osteospermum Bas de wilt via Fh", "210009 - P105 Dianthus Oscar Bas de wilt via FH", "25% roze / 25% wit / 50% rood", "25% roze / 25% wit / 50% rood afrekening FH", "3 kleuren", "3 kleuren per balkonbakje", "3 kleuren rood / blauw / roze", "3 kleuren rood / wit / roze", "4 mixen", "4 mixen (zie notitie)", "6 pack chrysant", "acaulis mix Aldi Sud", "Ajuga,Calocephalus,Coreopsis,Dianthus,Heuchera,Lavendel,Lysimachia,Meuhlenbeckia,Nepeta,Sedum,Senecio", "Aldi mix", "Anemone  Emmy Mix", "Angelonia mix", "Angelonia P12", "Antirrhinum", "Arabis LIDL mix", "Arabis roze", "Aster", "Aster mix", "Bacopa Trio", "Begonia", "Begonia Funky", "Begonia Rood 6 pack", "Begonia Roze 6 pack", "Begonia Wit 6 pack", "Bellis 1 stek per pot, 1/2 rood, 1/2 wit", "Bellis 1 stek per pot, 1/3 rood, 1/3 wit, 1/3 mix van rood en wit", "Bellis Perennis Aldi mix", "Bellis perennis LIDL mix", "Bellis Perennis LIDL mix", "Bellis Perennis Trio", "Bellis rood/wit", "Bellis Trio", "Bidens bijkoop", "Bidens bijkoop Brandcamp via factuur", "Bijkoop zie inkoopregel AI Bijkoop van Bragt", "Bijkoop zie inkoopregel Jan van Straaten", "Bollenmix 12 cm kwekerij van Bragt afrekening FH", "Bromellia mix", "Cabaret MixMasters", "cali rood geel blauw trio", "cali rose blauw paars trio", "Calibrachoa  / Parade", "Calibrachoa chameleon", "Calibrachoa diverse kleuren", "calibrachoa mono", "Calibrachoa mono", "calibrachoa Mono", "calibrachoa mono (ROZE)", "Calibrachoa mono 2 types", "Calibrachoa mono 3 types", "calibrachoa trio", "Calibrachoa trio", "Calibrachoa Trio", "calibrachoa trio (ROZE)", "Calibrachoa trio 3 types", "Campanula", "Campanula PKM via Fh", "Campanula PKM via FH", "Celosia", "Celosia Kelos soorten", "Chrysanthen mono/trio", "Coolwave", "Cornuta", "cornuta mono", "Cornuta Mono in jenny schaaltje mix 4 kleuren", "Cornuta trio", "Cornuta Vivaldi", "Crasspedia P12", "Cyclamen Midi", "Dahlia bijkoop", "Dahlia bijkoop kwekerij Jack Nouws via Floraholland", "Dahlia dahliette", "Dahlia special soorten mix", "Deltini mix", "Dianthus (roze en paars)", "Dianthus Flash!", "Dianthus Pink kisses", "Diva Cherry", "Divers", "diverse", "diverse groene planten kwekerij Bunnik", "Diverse kleuren", "diverse kleuren", "diverse mengsels klantwens", "diverse mixen AH", "diverse parade trio", "donkerrose dark pink", "doosmix", "Double Pink Vein", "Dubbelbloemige", "E3 Easy Wave Trio", "F1", "f1", "F1 mono", "florensis Gaertnererlebnis I", "florensis Gaertnerlebnis II", "florensis Pink Paradise", "Friends mix", "Fuchsia", "Fuchsia 19 cm stam celieplant koopt bij Hollandplant", "Fuchsia Bijkoop", "Fuchsia Hangend", "Fuchsia mono kleuren", "Fuchsia paars", "Galaxy diverse", "Garden mum mono", "Garden mums", "Gele Petunia,Lila Verbena,Rose Calibrachoa", "geranium", "Geranium Hang", "Geranium hang", "Geranium staand", "Geranium Staand", "geranium staand", "Geranium staand 5 kleuren", "Goldy Blue", "Gotunia diverse kleuren", "Gotunia Diverse kleuren", "Gotunia felle kleuren", "Gotunia speciale kleuren", "GP Powerplants", "Grandiflorum", "Groene Kamerplanten", "hangend (3xFaya, 3xLaura, 0xHilda)", "hangend (3xFaya, 3xLaura, 2xHilda)", "hangend (Faya, Laura, Hilda)", "Happy mix", "Happy Mix", "Happy mix (roze)", "Helianthus", "Hortensia Jan van Straten", "Hydrangea", "Hydrangea inkoop", "Hydrangea inkoop Jan van Straat via Factuur", "Hydrangea inkoop Jan van Straaten via Factuur", "I love you", "I love You", "I Love You,Pink kisses,Oscar", "I Love You,Pink kisses,Oscar spanje", "I Love You,Pink kisses,Oscar Spanje via factuur", "I Love You,Pink kisses,Peach Party", "I Love You,Pink kisses,Peach Party Spanje via factuur", "Iloveyou 10 stuks ,Pinkkisses25 stuks Peachparty 5 stuks", "Iloveyou 24 stuks ,Pinkkisses 40 stuks Peachparty 8 stuks", "Iloveyou 24 stuks ,Pinkkisses60 stuks Peachparty `12 stuks", "Impatiens baasmix 6 pack", "inkoop", "inkoop 0,955 kwekerij nederpel afrekening FH", "inkoop 1,18 bunnik  divere groene planten Afrekening FH", "inkoop derden", "Jan van Straaten via factuur", "Kalanchoe", "Kwekerij Wintertuin", "Lantana", "Lavandula 13 cm", "Lavandula P12", "Lavandula Sixpack", "Lavendel", "lidl mix", "Liefst F1!!!!", "Light Pink Eye", "Limbo Burgundy 5 x Plum 5 x", "Lobelia", "Lobelia 6 pack", "Lobelia Blauw", "Lobelia Heatopia 2 stek", "Lobelia liefst 4 tray blauw 1 tray rose als kan", "Lobelia richardii", "Lobelia trio", "lobelia trio", "Lobelia Trio", "milkshakes", "Mix", "Mix Hangplanten aldi sud", "Mix van Night sky 10 tray ,rave cherry 23 10 tray , reve pink barbados 10 tray , 5 tray violet en evt nog wat soorten erbij mag Lotte", "Mix van Night sky,rave rot,rave lila,rave pink,can can rosies Pink vein", "mixed varieties (2 beg, 1,5 lob, 1,5 pet, 1,5 tag, 1,5 imp), in black pack", "mixed varieties (Petunia - ca. 30%, Tagetes - ca. 30%, Begonia - ca. 20%, Lobelia - ca. 20%), in black pack", "mixed varieties (Petunia 1lg, Tagetes 1lg, Begonia 1lg, Lobelia 1lg), in black pack", "mixen cali, verb & pet", "Mixpot", "mixpot", "Mixpot vaderdag", "Mono", "mono", "Mono  30+", "Mono 1 laag en 1 laag Trio wit-rose-paars zomertint", "Mono 30+", "Mono kleuren", "Mono kleuren mix", "Mono mix", "Mono soorten", "Mono uitvoering", "Mono wit/rood", "Mono; roze en wit", "Multiflora 5 stek", "Multiflora 5 stek mono kleuren", "Myosotis Trio", "Mysty & Friends", "Netto Duitsland mix specials enzo", "Netto Mix 2024", "Ocean Breeze", "Oscar", "Oscar serie", "Oscar Serie", "Ostara en Magic (roze en paars)", "Osteospernum diverse", "parade cali paars ,verbena paars,petunia paars-rood", "parade cali paars, verbena paars,petunia lime", "parade cali rose-verbena paars-petunia lime", "parade cali rose-verbena rood-petunia rood", "Parade kwintet autumn", "Parade kwintet summer", "Parade kwintet summer + autumn", "Parade mixen", "parade trio", "parade trio (ROZE)", "Parade trio dark rose-paars-oranje", "Parade Trio dark rose-paars-oranje", "Pelargonium Grandiflorum", "Pelargonium Peltatum", "Pelargonium Staand", "Pelargonium Staand 5 kleuren", "Pelargonium staand 5 kleuren", "Peltatum red", "Peltatum Red", "Pentas", "Pentas Trio", "Peppy kleuren", "Petunia", "petunia", "Petunia - ca. 30%, Tagetes - ca. 30%, Begonia - ca. 20%, Lobelia - ca. 20%", "Petunia 3 kleuren", "Petunia baasmix 6 pack", "Petunia diverse kleuren", "petunia foto finish", "Petunia Foto finish", "Petunia in kleuren mono", "Petunia mono fotofinish", "Petunia Night Sky", "Petunia Vista Bubblegum", "Petunia vista Jazzberry", "Petunia vista Paradise", "Petunia vista silverberry", "Petunia Vista trio in 2 soorten (sortering 1 Bubblegum,paradise,silverberry,sortering 2 jazzberry, silverberry,bubblegum", "Petunia wit/marina, Verbena blauw/wit, Lobelia blauw/paars", "Pink Kisses", "Pink Kisses en oscar mix", "Pink Kisses en oscar mix Spanje Factuur", "Pink Kisses Heidkamp BV via Factuur", "Pink Kisses Spanje", "Pink Kisses Spanje factuur", "Pink Kisses Spanje Spanje factuur", "Pink Kisses Spanje via Factuur", "Pink Paradise", "PKM kwekerij DK campanula", "PKM kwekerij DK campanula via Fh", "PKM kwekerij DK via FH", "Platycodon", "Platycodon 3 kleuren rose wit blauw", "Platycodon blauw", "Platycodon Pink en Blue", "Pom Pom", "Portulaca", "Portulaca diverse", "Portulaca oranje roze geel", "Portulaca per pot 1 kleur 3 kleuren op ec", "Portulaca trio", "Potchrysant mono", "Potchrysant mono 3stek", "Potchrysant mono 3stek juli (rose wit paars)", "Potchrysant mono Netto Mix", "Potchrysant mono Netto mix", "Potchrysant mono uitvoering in decopot", "Potchrysant Splash soorten", "Potchrysant trio", "Potchrysant trio Netto Mix", "Potchrysant trio Netto mix", "Pretty Little", "Primula Acaulis", "Primula sweet kisses", "Primula sweet kisses Ammerlaan Sosef via Floraholland", "pure white, pink, hot pink", "Raintastic", "Red", "rood", "rood 3+", "rood 4+", "rood 5+", "rood 5+ Fairtrade", "rood in Mand", "rose 5 + Fairtrade", "rose 5+ Fairtrade", "Rose en Paars", "rose pink", "rosemix en blauwmix", "Salvia", "Salvia 2 kleuren", "Salvia 3 kleuren", "Salvia Nemoroa Sensation", "Sanvitalia", "Sanvitalia bijkoop", "Sanvitalia bijkoop Brandcamp via factuur", "Saxifraga", "Saxifraga LIDL mix", "Scaevola", "Scaevola Blauw", "Scaevola Duo White Blue", "Scaevola Trio", "Scaevola trio", "Scaevola trio (50%), blauw (50%)", "Schaal 29 cm", "Schaal 29 cm de croon factuur", "Sedum P12", "Sedum P17", "Sempervivum 4 pack", "Sempervivum 4 pack factuur de croon", "Skyfall mono", "Skyfall Mono", "Skyfall trio", "Skyfall Trio", "Snail Away", "Special Moederdag Mix", "Special Moederdag Mix Poiesz", "specials kwekerij Nederpel", "staand (2xBianca, 2xSoila, 3xDiana)", "staand (3xBianca, 3xSoila, 0xDiana)", "staand (Bianca, Soila, Diana)", "Stekpekgoed", "Stekperkgoed", "Tagetes baasmix 6 pack", "Trilogy diverse kleuren", "Trio", "Trio 1 laag wit-rose-paars zomertint", "Trio en Mono uitvoering", "Trio; white/lavender/lipstick + white/lavender/dark red", "Vaste plantenmix kw. Scholten", "Vaste plantenmix kw. Scholten via FH", "verbena", "verbena blauw wit", "Verbena bordeauxrood, Petunia paars/wit, Brachyscome paars", "Verbena Burgundy/Petunia rood/Calibrachoa rood", "Verbena diverse kleuren", "Verbena Rigida Venosa 17 cm", "Verbena rood, Petunia rood, Calibrachoa rood", "verbena rood-wit", "Verbena rood-wit/Petunia rosa/wit/Calibrachoa lila vein", "Verbena rood/wit, Petunia roze/wit, Calibrachoa roze ader", "verbena trio", "Verbena trio", "Verbena Trio", "verbena trio (ROZE)", "verbena twister obsession", "Verbena wicked kleuren", "Viola Corn. Mix", "Viola Cornuta Aldi mix", "Viola Cornuta Aldi NL mix", "Viola Cornuta LIDL mix", "Viola Cornuta mix", "Viola Cornuta mono", "Viola F1 Aldi Mix", "Viola F1 Aldi mix", "Viola F1 Aldi NL mix", "Viola F1 LIDL mix", "Viola F1 mono", "Viola/Bellis/primula", "White Splash", "Wicked kleuren", "wit", "wit 5+ Fairtrade", "wit pure white", "Zaaiperkgoed", "zaaiperkgoed", "zaaiperkgoed 6 pack", "Zaaiperkgoedmix OBI", "zaaipg mix", "Zonale red", "Zonale Red"]
 };
 
 // Field to select id mapping
@@ -389,6 +404,14 @@ function initDropdowns() {
   fillSelect('f-boekingsgroep', STAM.boekingsgroepen, b => b.code + ' — ' + b.naam);
   fillSelect('f-fust', STAM.fust, f => f.code + ' — ' + f.omschrijving);
   fillSelect('f-afzetkanaal', STAM.afzetkanalen, a => a.code + ' — ' + a.naam);
+  fillDatalist('dl-teelt', REF.teelt);
+  fillDatalist('dl-teeltomschrijving', REF.teeltomschrijving);
+}
+
+function fillDatalist(id, items) {
+  const dl = document.getElementById(id);
+  if (!dl) return;
+  dl.innerHTML = items.map(v => '<option value="' + String(v).replace(/"/g,'&quot;') + '"></option>').join('');
 }
 initDropdowns();
 
@@ -481,6 +504,7 @@ function submitArtikel() {
     thema:gv('f-thema'), soort:gv('f-soort'), typekleur:gv('f-typekleur'),
     naam:buildNaam(), sticker:buildSticker(),
     artikelnr: editIndex >= 0 ? artikelen[editIndex].artikelnr : generateNr(comb, pot),
+    teelt:gv('f-teelt'), teeltomschrijving:gv('f-teeltomschrijving'),
     kleurcode:gv('f-kleurcode'), actief:gv('f-actief'),
     opmerkingen:gv('f-opmerkingen'), oudeNaam: editIndex >= 0 ? (artikelen[editIndex].oudeNaam||'') : '',
     categorie:gv('f-categorie'), geslacht:gv('f-geslacht'),
@@ -498,6 +522,14 @@ function submitArtikel() {
     artikelen.push(a);
     toast('Artikel toegevoegd: ' + a.naam);
   }
+
+  ['teelt','teeltomschrijving'].forEach(f => {
+    const v = (a[f]||'').trim();
+    if (v && !REF[f].includes(v)) {
+      REF[f].push(v); REF[f].sort();
+      fillDatalist(f === 'teelt' ? 'dl-teelt' : 'dl-teeltomschrijving', REF[f]);
+    }
+  });
 
   renderTable();
   cancelEdit();
@@ -521,6 +553,8 @@ function editArtikel(i) {
   document.getElementById('f-thema').value = a.thema;
   document.getElementById('f-soort').value = a.soort;
   document.getElementById('f-typekleur').value = a.typekleur;
+  document.getElementById('f-teelt').value = a.teelt||'';
+  document.getElementById('f-teeltomschrijving').value = a.teeltomschrijving||'';
   document.getElementById('f-kleurcode').value = a.kleurcode||'';
   document.getElementById('f-actief').value = a.actief||'Ja';
   document.getElementById('f-opmerkingen').value = a.opmerkingen||'';
@@ -547,7 +581,7 @@ function removeArtikel(i) {
 
 function cancelEdit() {
   editIndex = -1;
-  ['f-potmaat','f-combinatie','f-thema','f-soort','f-typekleur','f-kleurcode','f-opmerkingen'].forEach(id=>{
+  ['f-potmaat','f-combinatie','f-thema','f-soort','f-typekleur','f-teelt','f-teeltomschrijving','f-kleurcode','f-opmerkingen'].forEach(id=>{
     document.getElementById(id).value = '';
   });
   document.getElementById('f-merk').value = 'Blooming Joy';
@@ -567,7 +601,7 @@ function renderTable() {
   // Search
   const q = (document.getElementById('search-input')?.value || '').toLowerCase();
   if (q) data = data.filter(a =>
-    (a.naam+a.thema+a.soort+a.artikelnr+a.typekleur+a.potmaat).toLowerCase().includes(q)
+    ((a.naam||'')+(a.thema||'')+(a.soort||'')+(a.artikelnr||'')+(a.typekleur||'')+(a.potmaat||'')+(a.teelt||'')+(a.teeltomschrijving||'')).toLowerCase().includes(q)
   );
 
   // Sort
@@ -586,6 +620,8 @@ function renderTable() {
     <td class="cell-edit" data-i="${a._i}" data-f="thema" title="Klik om te bewerken">${esc(a.thema)}</td>
     <td class="cell-edit" data-i="${a._i}" data-f="soort" title="Klik om te bewerken">${esc(a.soort)}</td>
     <td class="cell-edit" data-i="${a._i}" data-f="typekleur" title="Klik om te bewerken">${esc(a.typekleur)}</td>
+    <td class="cell-edit" data-i="${a._i}" data-f="teelt" title="Klik om te bewerken">${esc(a.teelt)}</td>
+    <td class="cell-edit" data-i="${a._i}" data-f="teeltomschrijving" title="Klik om te bewerken">${esc(a.teeltomschrijving)}</td>
     <td class="cell-edit" data-i="${a._i}" data-f="naam" title="Klik om te bewerken">${esc(a.naam)}</td>
     <td class="cell-edit" data-i="${a._i}" data-f="sticker" title="Klik om te bewerken">${esc(a.sticker)}</td>
     <td><code>${esc(a.artikelnr)}</code></td>
@@ -604,6 +640,7 @@ function renderTable() {
 let inlineEditing = false;
 const SELECT_FIELDS = ['potmaat','combinatie','thema','soort','typekleur','actief'];
 const REGEN_FIELDS  = ['potmaat','combinatie','thema','soort','typekleur'];
+const DATALIST_FIELDS = {'teelt':'dl-teelt','teeltomschrijving':'dl-teeltomschrijving'};
 
 function startInlineEdit(td, i, field) {
   if (inlineEditing) return;
@@ -629,6 +666,7 @@ function startInlineEdit(td, i, field) {
     input = document.createElement('input');
     input.type = 'text';
     input.value = original;
+    if (DATALIST_FIELDS[field]) input.setAttribute('list', DATALIST_FIELDS[field]);
   }
   input.className = 'cell-input';
 
@@ -649,6 +687,10 @@ function startInlineEdit(td, i, field) {
         if (REGEN_FIELDS.includes(field)) {
           a.naam = buildNaamFromObj(a);
           a.sticker = buildStickerFromObj(a);
+        }
+        if (DATALIST_FIELDS[field] && newVal && !REF[field].includes(newVal)) {
+          REF[field].push(newVal); REF[field].sort();
+          fillDatalist(DATALIST_FIELDS[field], REF[field]);
         }
         saveState();
         toast('Bijgewerkt: ' + (field === 'actief' ? 'Actief' : field));
@@ -702,7 +744,7 @@ function exportExcel() {
   if (!artikelen.length) { toast('Geen artikelen'); return; }
 
   // Sheet 1: Verkoopartikelen (main data)
-  const hMain = ['Nr.','Omschrijving','Omschrijving 2','Artikelcategoriecode','Basiseenheid','Productboekingsgroep','Geslacht','Artikelkleur','Potmaat','Combinatie','Thema','Soort','Typekleur','Stickernaam','Actief','Opmerkingen'];
+  const hMain = ['Nr.','Omschrijving','Omschrijving 2','Artikelcategoriecode','Basiseenheid','Productboekingsgroep','Geslacht','Artikelkleur','Potmaat','Combinatie','Thema','Soort','Typekleur','Teelt','Teeltomschrijving','Stickernaam','Actief','Opmerkingen'];
   const rowsMain = artikelen.map(a => [
     a.artikelnr,
     a.naam,
@@ -717,6 +759,8 @@ function exportExcel() {
     a.thema,
     a.soort,
     a.typekleur,
+    a.teelt || '',
+    a.teeltomschrijving || '',
     a.sticker,
     a.actief || 'Ja',
     a.opmerkingen || ''
@@ -726,7 +770,7 @@ function exportExcel() {
 
   // Column widths
   wsMain['!cols'] = [
-    {wch:14},{wch:40},{wch:25},{wch:18},{wch:10},{wch:22},{wch:8},{wch:12},{wch:10},{wch:12},{wch:14},{wch:20},{wch:14},{wch:28},{wch:8},{wch:20}
+    {wch:14},{wch:40},{wch:25},{wch:18},{wch:10},{wch:22},{wch:8},{wch:12},{wch:10},{wch:12},{wch:14},{wch:20},{wch:14},{wch:38},{wch:38},{wch:28},{wch:8},{wch:20}
   ];
 
   // Header styling (bold)
@@ -768,8 +812,8 @@ function exportExcel() {
 // Export CSV
 function exportCSV() {
   if (!artikelen.length) { toast('Geen artikelen'); return; }
-  const h = ['Potmaat','Merk/Lijn','Combinatie','Thema','Soort','Typekleur','Naam uitgeschreven','Stickernaam','Artikelnr','Kleurcode','Actief','Opmerkingen','Artikelcategorie','Geslacht','Eenheid','Productboekingsgroep','Fustcode','Afzetkanaal'];
-  const rows = artikelen.map(a => [a.potmaat,a.merk,a.combinatie,a.thema,a.soort,a.typekleur,a.naam,a.sticker,a.artikelnr,a.kleurcode,a.actief,a.opmerkingen,a.categorie,a.geslacht,a.eenheid,a.boekingsgroep,a.fust,a.afzetkanaal]);
+  const h = ['Potmaat','Merk/Lijn','Combinatie','Thema','Soort','Typekleur','Teelt','Teeltomschrijving','Naam uitgeschreven','Stickernaam','Artikelnr','Kleurcode','Actief','Opmerkingen','Artikelcategorie','Geslacht','Eenheid','Productboekingsgroep','Fustcode','Afzetkanaal'];
+  const rows = artikelen.map(a => [a.potmaat,a.merk,a.combinatie,a.thema,a.soort,a.typekleur,a.teelt,a.teeltomschrijving,a.naam,a.sticker,a.artikelnr,a.kleurcode,a.actief,a.opmerkingen,a.categorie,a.geslacht,a.eenheid,a.boekingsgroep,a.fust,a.afzetkanaal]);
   const csv = [h,...rows].map(r => r.map(c => '"'+(c||'').replace(/"/g,'""')+'"').join(';')).join('\n');
   dl('\uFEFF'+csv, 'masterdata_artikelen.csv', 'text/csv;charset=utf-8');
   toast('CSV geexporteerd');

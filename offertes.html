@@ -653,6 +653,14 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
         <label>Naar jaar</label>
         <input id="ro-to" type="number" min="2020" max="2099">
       </div>
+      <div class="form-group">
+        <label>Week vanaf <span style="font-weight:400;color:#888">(leeg = alle)</span></label>
+        <select id="ro-week-min"><option value="">—</option></select>
+      </div>
+      <div class="form-group">
+        <label>Week tot <span style="font-weight:400;color:#888">(leeg = alle)</span></label>
+        <select id="ro-week-max"><option value="">—</option></select>
+      </div>
     </div>
     <div style="margin:10px 0 6px;font-size:.75rem;font-weight:700;color:#555;text-transform:uppercase">Statussen om mee te nemen</div>
     <div id="ro-statuses" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:.85rem"></div>
@@ -1295,6 +1303,11 @@ function openRolloverModal() {
   const defaultFrom = Math.max(...years);
   $('ro-from').innerHTML = years.map(y => '<option value="'+y+'"'+(y===defaultFrom?' selected':'')+'>'+y+'</option>').join('');
   $('ro-to').value = defaultFrom + 1;
+  // Week selects (1..53)
+  const weekOpts = Array.from({length:53}, (_,i) => '<option value="'+(i+1)+'">'+(i+1)+'</option>').join('');
+  ['ro-week-min','ro-week-max'].forEach(id => {
+    $(id).innerHTML = '<option value="">—</option>' + weekOpts;
+  });
   // Status checkboxes
   const allStatuses = DATA.statussen.map(s => s.code);
   $('ro-statuses').innerHTML = allStatuses.map(c => {
@@ -1305,9 +1318,11 @@ function openRolloverModal() {
   $('ro-reset').checked = false;
   $('ro-note').checked = true;
   $('rollover-modal').classList.add('show');
-  // Wire from/to change
+  // Wire change handlers
   $('ro-from').onchange = updateRolloverPreview;
   $('ro-to').oninput = updateRolloverPreview;
+  $('ro-week-min').onchange = updateRolloverPreview;
+  $('ro-week-max').onchange = updateRolloverPreview;
   updateRolloverPreview();
 }
 function closeRolloverModal() { $('rollover-modal').classList.remove('show'); }
@@ -1319,21 +1334,44 @@ function selectedRolloverStatuses() {
 function rolloverMatches() {
   const from = N($('ro-from').value);
   const sts = selectedRolloverStatuses();
-  return regels.filter(r => N(r.jaar) === from && sts.includes(r.status));
+  const wMin = N($('ro-week-min').value);
+  const wMax = N($('ro-week-max').value);
+  return regels.filter(r => {
+    if (N(r.jaar) !== from) return false;
+    if (!sts.includes(r.status)) return false;
+    const w = N(r.week);
+    if (wMin && w < wMin) return false;
+    if (wMax && w > wMax) return false;
+    return true;
+  });
 }
 
 function updateRolloverPreview() {
   const matches = rolloverMatches();
   $('ro-preview').textContent = matches.length;
   const to = N($('ro-to').value);
-  const existingTo = regels.filter(r => N(r.jaar) === to).length;
+  const wMin = N($('ro-week-min').value);
+  const wMax = N($('ro-week-max').value);
   const w = $('ro-warning');
+  // Check overlap in target year for the selected week range
+  const targetOverlap = regels.filter(r => {
+    if (N(r.jaar) !== to) return false;
+    const w0 = N(r.week);
+    if (wMin && w0 < wMin) return false;
+    if (wMax && w0 > wMax) return false;
+    return true;
+  }).length;
+
   if (!to || to < 2020 || to > 2099) {
     w.style.display = 'block';
     w.textContent = '⚠ Vul een geldig doel-jaar in (2020-2099)';
-  } else if (existingTo > 0) {
+  } else if (wMin && wMax && wMin > wMax) {
     w.style.display = 'block';
-    w.textContent = '⚠ Er zijn al ' + existingTo + ' regels met jaar ' + to + ' — deze actie maakt duplicaten.';
+    w.textContent = '⚠ Week vanaf is groter dan Week tot';
+  } else if (targetOverlap > 0) {
+    const range = (wMin || wMax) ? ' (week '+(wMin||'1')+'–'+(wMax||'53')+')' : '';
+    w.style.display = 'block';
+    w.textContent = '⚠ Er zijn al ' + targetOverlap + ' regels in jaar ' + to + range + ' — deze actie maakt duplicaten.';
   } else {
     w.style.display = 'none';
   }
@@ -1363,11 +1401,16 @@ function doRollover() {
   });
   regels = regels.concat(copies);
   refreshJaarSelects();
+  const wMin = N($('ro-week-min').value);
+  const wMax = N($('ro-week-max').value);
   closeRolloverModal();
-  // Auto-filter to the new year so the user immediately sees the result
+  // Auto-filter to the new year + week range so the user immediately sees the result
   $('f-jaar').value = String(to);
+  $('f-week-min').value = wMin ? String(wMin) : '';
+  $('f-week-max').value = wMax ? String(wMax) : '';
   renderTable();
-  toast(copies.length + ' regels overgezet naar ' + to + ' (status V)');
+  const rangeMsg = (wMin || wMax) ? ' (week '+(wMin||'1')+'–'+(wMax||'53')+')' : '';
+  toast(copies.length + ' regels overgezet naar ' + to + rangeMsg + ' (status V)');
 }
 
 /* === MASTER PICKER === */

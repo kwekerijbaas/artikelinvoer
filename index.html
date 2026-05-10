@@ -100,6 +100,17 @@ header .sub{opacity:.8;font-size:.8rem}
 .artikel-table td{padding:5px;border-bottom:1px solid #eee}
 .artikel-table tr:hover td{background:var(--groen-licht)}
 .artikel-table tr.editing td{background:#fff3e0}
+
+/* Inline cell editing */
+.cell-edit{cursor:cell;position:relative}
+.cell-edit:hover{background:#fff8e1 !important;outline:1px dashed var(--oranje);outline-offset:-1px}
+.cell-edit.editing-cell{background:#fff !important;padding:0}
+.cell-input{
+  width:100%;padding:4px 5px;border:1px solid var(--groen);
+  border-radius:3px;font:inherit;font-size:.78rem;background:#fff;
+  outline:none;box-shadow:0 0 0 2px var(--groen-licht);font-family:var(--font)
+}
+select.cell-input{padding:3px 4px;cursor:pointer}
 .table-wrap{max-height:500px;overflow-y:auto;border:1px solid var(--border);border-radius:6px}
 
 .badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.72rem;font-weight:600}
@@ -413,33 +424,43 @@ function closeModal() {
 // Preview
 function gv(id) { return document.getElementById(id).value; }
 
-function buildNaam() {
-  const pot=gv('f-potmaat'), merk=gv('f-merk'), comb=gv('f-combinatie');
-  const thema=gv('f-thema'), soort=gv('f-soort'), kleur=gv('f-typekleur');
-  if (!pot) return '';
-  let p = [pot];
-  if (merk === 'Blooming Joy') {
-    if (comb==='Family') p.push('BJ Fa.');
-    else if (comb==='Friends') p.push('BJ Fr.');
-    else if (comb==='Solo') p.push('BJ Solo');
+function buildNaamFromObj(a) {
+  if (!a.potmaat) return '';
+  let p = [a.potmaat];
+  if (a.merk === 'Blooming Joy') {
+    if (a.combinatie==='Family') p.push('BJ Fa.');
+    else if (a.combinatie==='Friends') p.push('BJ Fr.');
+    else if (a.combinatie==='Solo') p.push('BJ Solo');
     else p.push('BJ');
   }
-  if (thema) p.push(thema);
-  if (comb==='Solo' && soort) p.push(soort);
-  if (kleur) p.push(kleur);
+  if (a.thema) p.push(a.thema);
+  if (a.combinatie==='Solo' && a.soort) p.push(a.soort);
+  if (a.typekleur) p.push(a.typekleur);
   return p.join(' ').trim();
 }
 
-function buildSticker() {
-  const pot=gv('f-potmaat'), comb=gv('f-combinatie');
-  const soort=gv('f-soort'), kleur=gv('f-typekleur');
-  if (!pot) return '';
-  let p = [pot, 'BJ'];
-  if (comb) p.push(comb.substring(0,3));
-  if (comb==='Friends') p.push('Par');
-  else if (soort) p.push(soort.substring(0,3));
-  if (kleur) p.push(kleur);
+function buildStickerFromObj(a) {
+  if (!a.potmaat) return '';
+  let p = [a.potmaat, 'BJ'];
+  if (a.combinatie) p.push(a.combinatie.substring(0,3));
+  if (a.combinatie==='Friends') p.push('Par');
+  else if (a.soort) p.push(a.soort.substring(0,3));
+  if (a.typekleur) p.push(a.typekleur);
   return p.join(' ').trim();
+}
+
+function buildNaam() {
+  return buildNaamFromObj({
+    potmaat: gv('f-potmaat'), merk: gv('f-merk'), combinatie: gv('f-combinatie'),
+    thema: gv('f-thema'), soort: gv('f-soort'), typekleur: gv('f-typekleur')
+  });
+}
+
+function buildSticker() {
+  return buildStickerFromObj({
+    potmaat: gv('f-potmaat'), combinatie: gv('f-combinatie'),
+    soort: gv('f-soort'), typekleur: gv('f-typekleur')
+  });
 }
 
 function updatePreview() {
@@ -558,13 +579,17 @@ function renderTable() {
   }
 
   const tbody = document.getElementById('artikel-body');
+  const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   tbody.innerHTML = data.map(a => `<tr class="${a._i===editIndex?'editing':''}">
-    <td>${a.potmaat}</td>
-    <td><span class="badge badge-${a.combinatie}">${a.combinatie}</span></td>
-    <td>${a.thema}</td><td>${a.soort}</td><td>${a.typekleur}</td>
-    <td>${a.naam}</td><td>${a.sticker}</td>
-    <td><code>${a.artikelnr}</code></td>
-    <td>${a.actief}</td>
+    <td class="cell-edit" data-i="${a._i}" data-f="potmaat" title="Klik om te bewerken">${esc(a.potmaat)}</td>
+    <td class="cell-edit" data-i="${a._i}" data-f="combinatie" title="Klik om te bewerken"><span class="badge badge-${esc(a.combinatie)}">${esc(a.combinatie)}</span></td>
+    <td class="cell-edit" data-i="${a._i}" data-f="thema" title="Klik om te bewerken">${esc(a.thema)}</td>
+    <td class="cell-edit" data-i="${a._i}" data-f="soort" title="Klik om te bewerken">${esc(a.soort)}</td>
+    <td class="cell-edit" data-i="${a._i}" data-f="typekleur" title="Klik om te bewerken">${esc(a.typekleur)}</td>
+    <td class="cell-edit" data-i="${a._i}" data-f="naam" title="Klik om te bewerken">${esc(a.naam)}</td>
+    <td class="cell-edit" data-i="${a._i}" data-f="sticker" title="Klik om te bewerken">${esc(a.sticker)}</td>
+    <td><code>${esc(a.artikelnr)}</code></td>
+    <td class="cell-edit" data-i="${a._i}" data-f="actief" title="Klik om te bewerken">${esc(a.actief)}</td>
     <td style="white-space:nowrap">
       <button class="btn btn-edit" onclick="editArtikel(${a._i})">Edit</button>
       <button class="btn btn-danger" style="padding:3px 8px;font-size:.75rem" onclick="removeArtikel(${a._i})">X</button>
@@ -574,6 +599,83 @@ function renderTable() {
   document.getElementById('artikel-count').textContent = data.length + ' van ' + artikelen.length + ' artikelen';
   updateStats();
 }
+
+// Inline cell editing
+let inlineEditing = false;
+const SELECT_FIELDS = ['potmaat','combinatie','thema','soort','typekleur','actief'];
+const REGEN_FIELDS  = ['potmaat','combinatie','thema','soort','typekleur'];
+
+function startInlineEdit(td, i, field) {
+  if (inlineEditing) return;
+  inlineEditing = true;
+  const a = artikelen[i];
+  const original = a[field] == null ? '' : a[field];
+  td.classList.add('editing-cell');
+
+  let input;
+  if (SELECT_FIELDS.includes(field)) {
+    input = document.createElement('select');
+    const blank = document.createElement('option');
+    blank.value = ''; blank.textContent = '— Kies —';
+    input.appendChild(blank);
+    const options = field === 'actief' ? ['Ja','Nee'] : (REF[field] || []);
+    options.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = v;
+      if (v === original) o.selected = true;
+      input.appendChild(o);
+    });
+  } else {
+    input = document.createElement('input');
+    input.type = 'text';
+    input.value = original;
+  }
+  input.className = 'cell-input';
+
+  td.innerHTML = '';
+  td.appendChild(input);
+  input.focus();
+  if (input.tagName === 'INPUT') input.select();
+
+  let done = false;
+  const finish = (commit) => {
+    if (done) return;
+    done = true;
+    inlineEditing = false;
+    if (commit) {
+      const newVal = (input.value || '').trim();
+      if (newVal !== original) {
+        a[field] = newVal;
+        if (REGEN_FIELDS.includes(field)) {
+          a.naam = buildNaamFromObj(a);
+          a.sticker = buildStickerFromObj(a);
+        }
+        saveState();
+        toast('Bijgewerkt: ' + (field === 'actief' ? 'Actief' : field));
+      }
+    }
+    renderTable();
+  };
+
+  input.addEventListener('blur', () => finish(true));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  if (input.tagName === 'SELECT') {
+    input.addEventListener('change', () => input.blur());
+  }
+}
+
+document.getElementById('artikel-body').addEventListener('click', (e) => {
+  const td = e.target.closest('td.cell-edit');
+  if (!td) return;
+  if (td.querySelector('.cell-input')) return;
+  const i = parseInt(td.dataset.i, 10);
+  const f = td.dataset.f;
+  if (Number.isNaN(i) || !f) return;
+  startInlineEdit(td, i, f);
+});
 
 function updateStats() {
   document.getElementById('stat-total').textContent = artikelen.length + ' artikelen';

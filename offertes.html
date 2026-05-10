@@ -267,6 +267,28 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 .picker-item .badge-Friends{background:#bbdefb;color:#1565c0}
 .picker-item .badge-Solo{background:#fff9c4;color:#f57f17}
 
+/* Bedrukkings-opties als uitklapbare kaarten */
+.bedruk-list{display:flex;flex-direction:column;gap:5px}
+.bedruk-card{border:1px solid var(--border);border-radius:4px;background:#fff;overflow:hidden}
+.bedruk-card.actief{border-color:var(--groen);background:#fafdf9}
+.bedruk-head{
+  display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;
+  background:#f5f5f5;font-size:.83rem;font-weight:600
+}
+.bedruk-card.actief .bedruk-head{background:var(--groen-licht);color:var(--groen-dark)}
+.bedruk-head input[type=checkbox]{width:16px;height:16px;accent-color:var(--groen)}
+.bedruk-head .icon{font-size:1rem}
+.bedruk-head .meta{margin-left:auto;font-size:.72rem;font-weight:500;color:#777;font-family:var(--font)}
+.bedruk-body{display:none;padding:8px 10px;border-top:1px solid var(--border);background:#fff}
+.bedruk-card.actief .bedruk-body{display:block}
+.bedruk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.bedruk-grid .form-group label{font-size:.66rem}
+.bedruk-grid .form-group select,
+.bedruk-grid .form-group input{padding:4px 6px;font-size:.78rem}
+@media (max-width: 1100px) {
+  .bedruk-grid{grid-template-columns:1fr 1fr}
+}
+
 /* MIX badge in table */
 .mix-badge{display:inline-block;padding:1px 6px;border-radius:9px;font-size:.65rem;font-weight:700;background:#7b1fa2;color:#fff;letter-spacing:.4px}
 
@@ -612,15 +634,52 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       </div>
     </div>
 
-    <div class="subhead">Bedrukking &amp; opties (vink aan wat van toepassing is)</div>
+    <div class="subhead">Verpakking algemeen</div>
     <div class="form-grid">
-      <div class="form-group"><label class="checkrow"><input id="d-karposter" type="checkbox"> Karposter</label></div>
-      <div class="form-group"><label class="checkrow"><input id="d-sticker" type="checkbox"> Karstickers</label></div>
-      <div class="form-group"><label class="checkrow"><input id="d-etiket" type="checkbox"> Etiket</label></div>
-      <div class="form-group"><label class="checkrow"><input id="d-hoes" type="checkbox"> Hoes</label></div>
-      <div class="form-group"><label class="checkrow"><input id="d-doos" type="checkbox"> Doos</label></div>
-      <div class="form-group"><label class="checkrow"><input id="d-draagbeugel" type="checkbox"> Draagbeugel</label></div>
+      <div class="form-group span2">
+        <label>Type verpakking</label>
+        <select id="d-type_verpakking"><option value=""></option></select>
+      </div>
+      <div class="form-group">
+        <label>Verpakking kleur</label>
+        <select id="d-verpakking_kleur"><option value=""></option></select>
+      </div>
+      <div class="form-group">
+        <label>BAAS / KLANT EAN</label>
+        <input id="d-ean" type="text">
+      </div>
+      <div class="form-group">
+        <label>Plantenpaspoort aanbrengen</label>
+        <select id="d-plantenpaspoort"><option value=""></option><option>Ja</option><option>Nee</option><option>N.v.t.</option></select>
+      </div>
+      <div class="form-group">
+        <label>Verkoopprijs consument (€)</label>
+        <input id="d-prijs_consument" type="number" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label>Sealen / strappen</label>
+        <input id="d-sealen_strappen" type="text">
+      </div>
+      <div class="form-group">
+        <label>BAASMIX / KLANTMIX</label>
+        <select id="d-mix_type"><option value=""></option><option>BAASMIX</option><option>KLANTMIX</option></select>
+      </div>
+      <div class="form-group span2">
+        <label>Details klantmix</label>
+        <input id="d-details_klantmix" type="text">
+      </div>
+      <div class="form-group">
+        <label>Min. contract %</label>
+        <input id="d-min_contract_pct" type="number" min="0" max="100" step="1">
+      </div>
+      <div class="form-group span2">
+        <label>Ladingdrager­samenstelling</label>
+        <input id="d-ladingdrager" type="text">
+      </div>
     </div>
+
+    <div class="subhead">Bedrukkings-opties (vink aan om uit te klappen)</div>
+    <div class="bedruk-list" id="bedruk-list"></div>
 
     <div class="subhead">Opmerking</div>
     <div class="form-grid">
@@ -827,6 +886,15 @@ function initLookups() {
   // Master picker potmaat options
   const pots = Array.from(new Set(MASTER_ARTIKELEN.map(a => a.potmaat).filter(Boolean))).sort();
   $('picker-pot').insertAdjacentHTML('beforeend', pots.map(p => '<option value="'+esc(p)+'">'+esc(p)+'</option>').join(''));
+
+  // Verpakking-algemeen dropdowns
+  const VERP_TYPES = ['Onbedrukt - Kleur onbekend','Onbedrukt - Rood','Onbedrukt - Geel','Onbedrukt - Antraciet','Onbedrukt - Paars','Onbedrukt - Roze','Onbedrukt - Wit','Onbedrukt - Groen','Onbedrukt - TST','Bedrukt - NVT','Bedrukt - Per soort - Klant specifiek','Bedrukt - Per soort - Blooming Joy','Bedrukt - Per soort - Klant NVT','Bedrukt - Per variant - Klant specifiek','Bedrukt - Per variant - Blooming Joy','Bedrukt - Per variant - Klant NVT'];
+  const KLEUR = ['Terracotta','Antraciet','TST','Groen','Geel','Blauw','Rood','Roze','Paars','Wit'];
+  fillSelect('d-type_verpakking', VERP_TYPES);
+  fillSelect('d-verpakking_kleur', KLEUR);
+
+  // Render bedrukkings-opties cards
+  renderBedrukCards();
 }
 
 /* === RENDER === */
@@ -1139,10 +1207,13 @@ const DRAWER_FIELDS = [
   'jaar','week','verlaaddag','losdag','actiedag','prijs','af_tuin','transport','fust_incl_excl',
   'type_kar','aantal_lagen_kar','aantal_fust_laag','aantal_per_fust','aantal_pl_kar','aantal_fust','aantal_kar_bruto',
   'maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zondag','geplande_aantallen',
+  // Verpakking algemeen
+  'type_verpakking','verpakking_kleur','ean','plantenpaspoort','prijs_consument','sealen_strappen',
+  'mix_type','details_klantmix','min_contract_pct','ladingdrager',
   'opmerking'
 ];
-const DRAWER_BOOLS = ['karposter','sticker','etiket','hoes','doos','draagbeugel'];
-const NUM_FIELDS = new Set(['jaar','week','prijs','aantal_lagen_kar','aantal_fust_laag','aantal_per_fust','aantal_pl_kar','aantal_fust','aantal_kar_bruto','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zondag','geplande_aantallen']);
+const DRAWER_BOOLS = []; // bedrukkings-checkboxes worden afgehandeld door BEDRUKKING_OPTIES / readBedrukFromForm
+const NUM_FIELDS = new Set(['jaar','week','prijs','aantal_lagen_kar','aantal_fust_laag','aantal_per_fust','aantal_pl_kar','aantal_fust','aantal_kar_bruto','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zondag','geplande_aantallen','prijs_consument','min_contract_pct']);
 
 function openDrawer(id) {
   editingId = id || null;
@@ -1188,6 +1259,9 @@ function openDrawer(id) {
   renderMixComponents();
   refreshMixCap();
 
+  // Bedrukkings-opties: laad checkbox + alle sub-velden
+  loadBedrukIntoForm(r || {});
+
   recalcDayTotal();
   $('drawer-bg').classList.add('show');
   $('drawer').classList.add('show');
@@ -1197,6 +1271,173 @@ function closeDrawer() {
   $('drawer-bg').classList.remove('show');
   $('drawer').classList.remove('show');
   editingId = null;
+}
+
+/* === BEDRUKKINGS-OPTIES (config-driven) === */
+const WIE = ['', 'Baas', 'Klant', 'Derde'];
+const STICKER_OP = ['', 'Pot', 'Hoes', 'Beide'];
+
+// Each option has: key (bool field), label, icon, subFields[]
+// subFields: {f: <field suffix>, label, type: 'text'|'num'|'wie'|'select', opts?: [...]}
+const BEDRUKKING_OPTIES = [
+  { key:'karposter', label:'Karposter', icon:'🪧', subFields:[
+      {f:'type', label:'Type karposter', type:'text'},
+      {f:'hoeveel', label:'Hoeveel/kar', type:'num'},
+      {f:'wie_layout', label:'Wie layout', type:'wie'},
+      {f:'wie_produceert', label:'Wie productie', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+      {f:'prijs', label:'Wat rekenen (€)', type:'num'},
+  ]},
+  { key:'sticker', label:'Sticker / karstickers', icon:'🏷️', subFields:[
+      {f:'op', label:'Op pot/hoes/beide', type:'select', opts: STICKER_OP},
+      {f:'aw', label:'AW artikelnr', type:'text'},
+      {f:'wie_layout', label:'Wie layout', type:'wie'},
+      {f:'wie_productie', label:'Wie productie', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'etiket', label:'Etiket', icon:'📄', subFields:[
+      {f:'aw', label:'AW artikelnr', type:'text'},
+      {f:'wie_layout', label:'Wie layout', type:'wie'},
+      {f:'wie_productie', label:'Wie productie', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'hoes', label:'Hoes', icon:'👜', subFields:[
+      {f:'aw', label:'AW artikelnr', type:'text'},
+      {f:'wie_layout', label:'Wie layout', type:'wie'},
+      {f:'wie_productie', label:'Wie productie', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'doos', label:'Doos', icon:'📦', subFields:[
+      {f:'code', label:'Dooscode', type:'text'},
+      {f:'wie_bestelt', label:'Wie bestelt', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'tray', label:'Tray (fust-variant)', icon:'🧺', subFields:[
+      {f:'aw', label:'AW fustvariant', type:'text'},
+      {f:'wie_productie', label:'Wie productie', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'inlegtray', label:'Inlegtray / -vel', icon:'📒', subFields:[
+      {f:'type', label:'Type inleg', type:'text'},
+      {f:'wie_regelt', label:'Wie regelt', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'tgw', label:'Toegevoegde waarde (TGW)', icon:'➕', subFields:[
+      {f:'welke', label:'Welke TGW', type:'text'},
+      {f:'wie_bestelt', label:'Wie bestelt', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'draagbeugel', label:'Draagbeugel', icon:'🪝', subFields:[
+      {f:'aw', label:'AW artikelnr', type:'text'},
+      {f:'wie_layout', label:'Wie layout', type:'wie'},
+      {f:'wie_productie', label:'Wie productie', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'overpakken', label:'Overpakken', icon:'🔄', subFields:[
+      {f:'aantal', label:'Aantal overpakken', type:'num'},
+      {f:'prijs_per_eenheid', label:'Prijs/eenheid (€)', type:'num'},
+  ]},
+];
+
+// Build flat list of every regel-field that the cards introduce.
+function bedrukSubFieldId(optKey, subKey) { return optKey + '_' + subKey; }
+function bedrukSubFieldDomId(optKey, subKey) { return 'd-' + bedrukSubFieldId(optKey, subKey); }
+function allBedrukFieldIds() {
+  const ids = [];
+  BEDRUKKING_OPTIES.forEach(o => {
+    o.subFields.forEach(f => ids.push(bedrukSubFieldId(o.key, f.f)));
+  });
+  return ids;
+}
+const BEDRUK_NUM_SUFFIXES = new Set(['hoeveel','prijs','aantal','prijs_per_eenheid']);
+function isBedrukNumField(fid) {
+  const idx = fid.lastIndexOf('_');
+  if (idx < 0) return false;
+  const suf = fid.slice(idx+1);
+  return BEDRUK_NUM_SUFFIXES.has(suf) || BEDRUK_NUM_SUFFIXES.has(fid.replace(/^[a-z]+_/,''));
+}
+
+function renderBedrukCards() {
+  const wrap = $('bedruk-list');
+  if (!wrap) return;
+  const opt = (o) => '<option value="'+esc(o)+'">'+esc(o)+'</option>';
+  wrap.innerHTML = BEDRUKKING_OPTIES.map(o => {
+    const subFields = o.subFields.map(sf => {
+      const id = bedrukSubFieldDomId(o.key, sf.f);
+      let input;
+      if (sf.type === 'wie') {
+        input = '<select id="'+id+'">'+WIE.map(opt).join('')+'</select>';
+      } else if (sf.type === 'select') {
+        input = '<select id="'+id+'">'+(sf.opts||[]).map(opt).join('')+'</select>';
+      } else if (sf.type === 'num') {
+        input = '<input id="'+id+'" type="number" step="'+(sf.f.indexOf('prijs')>=0?'0.01':'1')+'" min="0">';
+      } else {
+        input = '<input id="'+id+'" type="text">';
+      }
+      return '<div class="form-group"><label>'+esc(sf.label)+'</label>'+input+'</div>';
+    }).join('');
+    return '<div class="bedruk-card" data-key="'+o.key+'">'
+      + '<div class="bedruk-head" onclick="toggleBedrukCard(\''+o.key+'\', event)">'
+        + '<input type="checkbox" id="d-'+o.key+'" onclick="event.stopPropagation()" onchange="syncBedrukCard(\''+o.key+'\')">'
+        + '<span class="icon">'+o.icon+'</span> <span>'+esc(o.label)+'</span>'
+        + '<span class="meta" id="bedruk-meta-'+o.key+'"></span>'
+      + '</div>'
+      + '<div class="bedruk-body"><div class="bedruk-grid">'+subFields+'</div></div>'
+    + '</div>';
+  }).join('');
+}
+
+function syncBedrukCard(key) {
+  const card = document.querySelector('.bedruk-card[data-key="'+key+'"]');
+  if (!card) return;
+  const cb = $('d-'+key);
+  card.classList.toggle('actief', !!cb.checked);
+  // Quick meta-string with key values filled in
+  const o = BEDRUKKING_OPTIES.find(x => x.key === key);
+  if (!o) return;
+  const parts = [];
+  o.subFields.forEach(sf => {
+    const v = ($(bedrukSubFieldDomId(key, sf.f)) || {}).value;
+    if (v) parts.push(sf.label + ': ' + v);
+  });
+  $('bedruk-meta-'+key).textContent = cb.checked ? parts.slice(0,3).join(' · ') : '';
+}
+
+function toggleBedrukCard(key, ev) {
+  if (ev && ev.target && ev.target.tagName === 'INPUT') return;
+  const cb = $('d-'+key);
+  cb.checked = !cb.checked;
+  syncBedrukCard(key);
+}
+
+function loadBedrukIntoForm(r) {
+  BEDRUKKING_OPTIES.forEach(o => {
+    const cb = $('d-'+o.key);
+    if (cb) cb.checked = !!(r && r[o.key]);
+    o.subFields.forEach(sf => {
+      const id = bedrukSubFieldDomId(o.key, sf.f);
+      const el = $(id);
+      if (!el) return;
+      const fid = bedrukSubFieldId(o.key, sf.f);
+      const val = r && r[fid] != null ? r[fid] : '';
+      el.value = val === 0 ? '' : val;
+    });
+    syncBedrukCard(o.key);
+  });
+}
+
+function readBedrukFromForm(r) {
+  BEDRUKKING_OPTIES.forEach(o => {
+    r[o.key] = !!$('d-'+o.key).checked;
+    o.subFields.forEach(sf => {
+      const id = bedrukSubFieldDomId(o.key, sf.f);
+      const el = $(id);
+      if (!el) return;
+      const v = el.value.trim();
+      const fid = bedrukSubFieldId(o.key, sf.f);
+      r[fid] = sf.type === 'num' ? N(v) : v;
+    });
+  });
 }
 
 function recalcDayTotal() {
@@ -1506,6 +1747,8 @@ function readForm() {
   // totaal recompute
   r.afgenomen_totaal = ['maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zondag']
     .reduce((s,d) => s + N(r[d]), 0);
+  // Bedrukkings-opties uitlezen (zet booleans + alle sub-velden)
+  readBedrukFromForm(r);
   // store karposter/sticker as Ja/Nee strings too for export compatibility
   r.karposter_ja_nee = r.karposter ? 'Ja' : 'Nee';
   r.sticker_ja_nee = r.sticker ? 'Ja' : 'Nee';
@@ -1732,17 +1975,31 @@ function downloadCurrentRapidStart() {
 /* === EXPORTS === */
 function exportCSV() {
   if (!regels.length) { toast('Geen regels'); return; }
-  const h = ['Jaar','Status','VRC','Verkoop/Opzet','Verkoper','Klant','Eindklant','Afzetland','Productgroep','Teelt','Bloeistadium','Teeltspecificatie','Potmaat','Planningsgroep','Week','Verlaaddag','Ma','Di','Wo','Do','Vr','Za','Zo','Totaal','Prijs','AfTuin','Transport','Fust','TypeKar','AantalLagenKar','AantalFustLaag','AantalPerFust','AantalPlKar','AantalFust','AantalKarBruto','Karposter','Karsticker','Etiket','Hoes','Doos','Draagbeugel','Opmerking','MixSamenstelling'];
-  const rows = regels.map(r => [
-    r.jaar, r.status, r.vrc, r.verkoop_of_opzet, r.verkoper, r.klant, r.eindklant, r.afzetland,
-    r.productgroep, r.teelt, r.bloeistadium, r.teeltspecificatie, r.potmaat, r.planningsgroep,
-    r.week, r.verlaaddag,
-    r.maandag, r.dinsdag, r.woensdag, r.donderdag, r.vrijdag, r.zaterdag, r.zondag,
-    r.afgenomen_totaal, r.prijs, r.af_tuin, r.transport, r.fust_incl_excl,
-    r.type_kar, r.aantal_lagen_kar, r.aantal_fust_laag, r.aantal_per_fust, r.aantal_pl_kar, r.aantal_fust, r.aantal_kar_bruto,
-    r.karposter?'Ja':'Nee', r.sticker?'Ja':'Nee', r.etiket?'Ja':'Nee', r.hoes?'Ja':'Nee', r.doos?'Ja':'Nee', r.draagbeugel?'Ja':'Nee',
-    r.opmerking, mixSummaryString(r)
-  ]);
+  // Build extended export header + row aligned with BEDRUKKING_OPTIES
+  const bedrukHeaders = [];
+  BEDRUKKING_OPTIES.forEach(o => {
+    bedrukHeaders.push(o.label);
+    o.subFields.forEach(sf => bedrukHeaders.push(o.label + ' — ' + sf.label));
+  });
+  const h = ['Jaar','Status','VRC','VRC info','Verkoop/Opzet','Verkoper','Klant','Eindklant','Afzetland','Productgroep','Teelt','Bloeistadium','Teeltspecificatie','Potmaat','Planningsgroep','Week','Verlaaddag','Losdag','Actiedag','Ma','Di','Wo','Do','Vr','Za','Zo','Totaal','Geplande','Prijs','AfTuin','Transport','Fust','TypeKar','AantalLagenKar','AantalFustLaag','AantalPerFust','AantalPlKar','AantalFust','AantalKarBruto','TypeVerpakking','VerpakkingKleur','EAN','Plantenpaspoort','PrijsConsument','SealenStrappen','MixType','DetailsKlantmix','MinContractPct','Ladingdrager', ...bedrukHeaders, 'Opmerking','MixSamenstelling'];
+  const rows = regels.map(r => {
+    const base = [
+      r.jaar, r.status, r.vrc, r.vrc_info, r.verkoop_of_opzet, r.verkoper, r.klant, r.eindklant, r.afzetland,
+      r.productgroep, r.teelt, r.bloeistadium, r.teeltspecificatie, r.potmaat, r.planningsgroep,
+      r.week, r.verlaaddag, r.losdag, r.actiedag,
+      r.maandag, r.dinsdag, r.woensdag, r.donderdag, r.vrijdag, r.zaterdag, r.zondag,
+      r.afgenomen_totaal, r.geplande_aantallen, r.prijs, r.af_tuin, r.transport, r.fust_incl_excl,
+      r.type_kar, r.aantal_lagen_kar, r.aantal_fust_laag, r.aantal_per_fust, r.aantal_pl_kar, r.aantal_fust, r.aantal_kar_bruto,
+      r.type_verpakking, r.verpakking_kleur, r.ean, r.plantenpaspoort, r.prijs_consument, r.sealen_strappen,
+      r.mix_type, r.details_klantmix, r.min_contract_pct, r.ladingdrager
+    ];
+    BEDRUKKING_OPTIES.forEach(o => {
+      base.push(r[o.key] ? 'Ja' : 'Nee');
+      o.subFields.forEach(sf => base.push(r[bedrukSubFieldId(o.key, sf.f)] != null ? r[bedrukSubFieldId(o.key, sf.f)] : ''));
+    });
+    base.push(r.opmerking || '', mixSummaryString(r));
+    return base;
+  });
   const csv = [h, ...rows].map(arr =>
     arr.map(c => '"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(';')
   ).join('\n');
@@ -1752,17 +2009,31 @@ function exportCSV() {
 
 function exportExcel() {
   if (!regels.length) { toast('Geen regels'); return; }
-  const h = ['Jaar','Status','VRC','Verkoop/Opzet','Verkoper','Klant','Eindklant','Afzetland','Productgroep','Teelt','Bloeistadium','Teeltspecificatie','Potmaat','Planningsgroep','Week','Verlaaddag','Ma','Di','Wo','Do','Vr','Za','Zo','Totaal','Prijs','AfTuin','Transport','Fust','TypeKar','AantalLagenKar','AantalFustLaag','AantalPerFust','AantalPlKar','AantalFust','AantalKarBruto','Karposter','Karsticker','Etiket','Hoes','Doos','Draagbeugel','Opmerking','MixSamenstelling'];
-  const rows = regels.map(r => [
-    r.jaar, r.status, r.vrc, r.verkoop_of_opzet, r.verkoper, r.klant, r.eindklant, r.afzetland,
-    r.productgroep, r.teelt, r.bloeistadium, r.teeltspecificatie, r.potmaat, r.planningsgroep,
-    r.week, r.verlaaddag,
-    r.maandag, r.dinsdag, r.woensdag, r.donderdag, r.vrijdag, r.zaterdag, r.zondag,
-    r.afgenomen_totaal, r.prijs, r.af_tuin, r.transport, r.fust_incl_excl,
-    r.type_kar, r.aantal_lagen_kar, r.aantal_fust_laag, r.aantal_per_fust, r.aantal_pl_kar, r.aantal_fust, r.aantal_kar_bruto,
-    r.karposter?'Ja':'Nee', r.sticker?'Ja':'Nee', r.etiket?'Ja':'Nee', r.hoes?'Ja':'Nee', r.doos?'Ja':'Nee', r.draagbeugel?'Ja':'Nee',
-    r.opmerking, mixSummaryString(r)
-  ]);
+  // Build extended export header + row aligned with BEDRUKKING_OPTIES
+  const bedrukHeaders = [];
+  BEDRUKKING_OPTIES.forEach(o => {
+    bedrukHeaders.push(o.label);
+    o.subFields.forEach(sf => bedrukHeaders.push(o.label + ' — ' + sf.label));
+  });
+  const h = ['Jaar','Status','VRC','VRC info','Verkoop/Opzet','Verkoper','Klant','Eindklant','Afzetland','Productgroep','Teelt','Bloeistadium','Teeltspecificatie','Potmaat','Planningsgroep','Week','Verlaaddag','Losdag','Actiedag','Ma','Di','Wo','Do','Vr','Za','Zo','Totaal','Geplande','Prijs','AfTuin','Transport','Fust','TypeKar','AantalLagenKar','AantalFustLaag','AantalPerFust','AantalPlKar','AantalFust','AantalKarBruto','TypeVerpakking','VerpakkingKleur','EAN','Plantenpaspoort','PrijsConsument','SealenStrappen','MixType','DetailsKlantmix','MinContractPct','Ladingdrager', ...bedrukHeaders, 'Opmerking','MixSamenstelling'];
+  const rows = regels.map(r => {
+    const base = [
+      r.jaar, r.status, r.vrc, r.vrc_info, r.verkoop_of_opzet, r.verkoper, r.klant, r.eindklant, r.afzetland,
+      r.productgroep, r.teelt, r.bloeistadium, r.teeltspecificatie, r.potmaat, r.planningsgroep,
+      r.week, r.verlaaddag, r.losdag, r.actiedag,
+      r.maandag, r.dinsdag, r.woensdag, r.donderdag, r.vrijdag, r.zaterdag, r.zondag,
+      r.afgenomen_totaal, r.geplande_aantallen, r.prijs, r.af_tuin, r.transport, r.fust_incl_excl,
+      r.type_kar, r.aantal_lagen_kar, r.aantal_fust_laag, r.aantal_per_fust, r.aantal_pl_kar, r.aantal_fust, r.aantal_kar_bruto,
+      r.type_verpakking, r.verpakking_kleur, r.ean, r.plantenpaspoort, r.prijs_consument, r.sealen_strappen,
+      r.mix_type, r.details_klantmix, r.min_contract_pct, r.ladingdrager
+    ];
+    BEDRUKKING_OPTIES.forEach(o => {
+      base.push(r[o.key] ? 'Ja' : 'Nee');
+      o.subFields.forEach(sf => base.push(r[bedrukSubFieldId(o.key, sf.f)] != null ? r[bedrukSubFieldId(o.key, sf.f)] : ''));
+    });
+    base.push(r.opmerking || '', mixSummaryString(r));
+    return base;
+  });
   const ws = XLSX.utils.aoa_to_sheet([h, ...rows]);
   ws['!cols'] = h.map(_=>({wch:14}));
   const wb = XLSX.utils.book_new();

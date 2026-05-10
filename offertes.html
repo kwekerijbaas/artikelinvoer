@@ -237,13 +237,27 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 .comp-add-row .btn{padding:5px 10px;font-size:.78rem}
 .empty-mix{padding:14px;text-align:center;color:#999;font-size:.82rem;font-style:italic}
 
+/* Image thumbnails + lightbox */
+.thumb{
+  width:40px;height:40px;object-fit:cover;border-radius:4px;
+  background:#eef1ec;border:1px solid #ddd;display:inline-block;vertical-align:middle;cursor:pointer
+}
+.thumb-placeholder{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.95rem;color:#9ccc65;cursor:default
+}
+.thumb-sm{width:28px;height:28px}
+.img-preview-modal .modal{width:auto;max-width:90vw;padding:14px;text-align:center}
+#img-preview-img{max-width:80vw;max-height:70vh;border-radius:6px;display:block;margin:0 auto}
+#img-preview-cap{margin-top:8px;font-size:.85rem;color:#444;font-weight:600}
+
 /* Master picker */
 .picker-tools{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
 .picker-tools input,.picker-tools select{padding:5px 7px;border:1px solid var(--border);border-radius:3px;font-size:.8rem;font-family:var(--font)}
 .picker-tools input{flex:1;min-width:180px}
 .picker-list{max-height:380px;overflow:auto;border:1px solid var(--border);border-radius:4px}
 .picker-item{
-  display:grid;grid-template-columns:90px 1fr 60px 110px 80px;gap:8px;
+  display:grid;grid-template-columns:46px 90px 1fr 60px 110px 80px;gap:8px;
   padding:7px 9px;border-bottom:1px solid #eee;align-items:center;cursor:pointer;font-size:.78rem
 }
 .picker-item:hover{background:var(--groen-licht)}
@@ -675,6 +689,17 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
     <div class="btn-row">
       <button class="btn btn-primary" onclick="doRollover()" id="ro-confirm">Overzetten →</button>
       <button class="btn btn-secondary" onclick="closeRolloverModal()">Annuleren</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image preview lightbox -->
+<div class="modal-bg img-preview-modal" id="img-preview-modal" onclick="if(event.target===this)closeImagePreview()">
+  <div class="modal">
+    <img id="img-preview-img" alt="">
+    <div id="img-preview-cap"></div>
+    <div class="btn-row" style="justify-content:center">
+      <button class="btn btn-secondary" onclick="closeImagePreview()">Sluiten</button>
     </div>
   </div>
 </div>
@@ -1250,9 +1275,11 @@ function renderMixComponents() {
   }
   list.innerHTML = currentMix.map((c, i) => {
     const swatchColor = colorFor(c.kleur || c.naam);
+    const imgUrl = imageUrlFor(c);
+    const imgClick = imgUrl ? ' onclick="openImagePreview(\''+(imgUrl||'').replace(/\'/g,'\\\\\\\'')+'\', \''+esc(c.naam||'').replace(/\'/g,'')+'\')"' : '';
     return '<div class="comp-item">'
-      + '<span class="swatch" style="background:'+swatchColor+'"></span>'
-      + '<span><span class="nm">'+esc(c.naam || c.teelt || '(geen naam)')+'</span> '
+      + '<span class="swatch" style="background:'+swatchColor+'" title="Kleur"></span>'
+      + '<span'+imgClick+' style="cursor:'+(imgUrl?'pointer':'default')+'">'+imgTag(c, 'thumb-sm')+' <span class="nm">'+esc(c.naam || c.teelt || '(geen naam)')+'</span> '
       + '<span class="nr">'+esc(c.artikelnr || '')+'</span></span>'
       + '<input type="text" placeholder="Potmaat" value="'+esc(c.potmaat||'')+'" oninput="updateMixField('+i+',\'potmaat\',this.value)">'
       + '<input type="text" placeholder="Kleur" value="'+esc(c.kleur||'')+'" oninput="updateMixField('+i+',\'kleur\',this.value)">'
@@ -1435,14 +1462,17 @@ function renderPickerList() {
     return ((a.artikelnr||'')+'|'+(a.naam||'')+'|'+(a.sticker||'')+'|'+(a.thema||'')+'|'+(a.soort||'')+'|'+(a.typekleur||''))
       .toLowerCase().includes(q);
   }).slice(0, 200);
-  $('picker-list').innerHTML = list.map(a =>
-    '<div class="picker-item" onclick=\'pickArtikel('+JSON.stringify(JSON.stringify(a))+')\'>'
+  $('picker-list').innerHTML = list.map(a => {
+    const imgUrl = imageUrlFor(a);
+    return '<div class="picker-item" onclick=\'pickArtikel('+JSON.stringify(JSON.stringify(a))+')\'>'
+      + '<span onclick="event.stopPropagation(); openImagePreview(\''+(imgUrl||'').replace(/\'/g,'\\\\\\\'')+'\', \''+esc(a.naam).replace(/\'/g,'')+'\')">'+imgTag(a)+'</span>'
       + '<code>'+esc(a.artikelnr||'-')+'</code>'
       + '<span><strong>'+esc(a.naam)+'</strong>'+(a.typekleur?(' · <span style="color:#666">'+esc(a.typekleur)+'</span>'):'')+'</span>'
       + '<span>'+esc(a.potmaat||'')+'</span>'
       + '<span>'+(a.combinatie?'<span class="badge-comb badge-'+esc(a.combinatie)+'">'+esc(a.combinatie)+'</span>':'')+'</span>'
       + '<span style="color:#666">'+esc(a.soort||'')+'</span>'
-    + '</div>').join('') || '<div class="empty-mix">Geen artikelen gevonden</div>';
+    + '</div>';
+  }).join('') || '<div class="empty-mix">Geen artikelen gevonden</div>';
 }
 function pickArtikel(jsonStr) {
   const a = JSON.parse(jsonStr);
@@ -1454,6 +1484,7 @@ function pickArtikel(jsonStr) {
     naam: a.naam || '',
     potmaat: a.potmaat || '',
     kleur: a.typekleur || '',
+    image_url: a.image_url || '',
     aantal_per_kar: rest || 0,
     teelt: '', // optional override
   });
@@ -1852,7 +1883,33 @@ function normalizeMasterRow(o) {
     thema: get('thema','theme','collection'),
     soort: get('soort','soortcode','species','type'),
     typekleur: get('typekleur','kleur','color','colour','typecolor'),
+    image_url: get('image_url','imageurl','afbeelding','image','foto','picture','imagepath','imagelink','foto_url'),
   };
+}
+
+function imageUrlFor(a) {
+  if (!a) return '';
+  if (a.image_url && /^https?:|^\/|^data:/i.test(a.image_url)) return a.image_url;
+  if (a.artikelnr) return 'images/' + a.artikelnr + '.jpg';
+  return '';
+}
+
+function imgTag(a, cls) {
+  const url = imageUrlFor(a);
+  if (!url) return '<span class="thumb thumb-placeholder" title="Geen afbeelding">🌱</span>';
+  const safe = url.replace(/"/g,'&quot;');
+  return '<img class="thumb '+(cls||'')+'" loading="lazy" src="'+safe+'" alt="" onerror="this.outerHTML=&quot;<span class=\\&quot;thumb thumb-placeholder\\&quot; title=\\&quot;Geen afbeelding\\&quot;>🌱</span>&quot;">';
+}
+
+function openImagePreview(url, caption) {
+  if (!url) return;
+  $('img-preview-img').src = url;
+  $('img-preview-cap').textContent = caption || '';
+  $('img-preview-modal').classList.add('show');
+}
+function closeImagePreview() {
+  $('img-preview-modal').classList.remove('show');
+  $('img-preview-img').src = '';
 }
 
 function parseCsvText(text) {
@@ -1984,6 +2041,7 @@ function startInlineEdit(td) {
 
 /* === KEYBOARD === */
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && $('img-preview-modal').classList.contains('show')) { closeImagePreview(); return; }
   if (e.key === 'Escape' && $('drawer').classList.contains('show')) { closeDrawer(); }
   if (e.key === 'Escape' && $('copy-modal').classList.contains('show')) { closeCopyPicker(); }
 });

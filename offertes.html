@@ -439,6 +439,7 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
           <th data-col="aantal_kar_bruto" onclick="sortBy('aantal_kar_bruto')">#Kar</th>
           <th data-col="karposter" onclick="sortBy('karposter')">KP</th>
           <th data-col="sticker" onclick="sortBy('sticker')">St</th>
+          <th data-col="karsticker" onclick="sortBy('karsticker')">Ks</th>
           <th class="no-sort">Acties</th>
         </tr></thead>
         <tbody id="tbl-body"></tbody>
@@ -1051,6 +1052,7 @@ function renderTable() {
       + '<td class="num">'+(fmt(N(r.aantal_kar_bruto)) || '')+'</td>'
       + '<td>'+(r.karposter?'✔':'')+'</td>'
       + '<td>'+(r.sticker?'✔':'')+'</td>'
+      + '<td>'+(r.karsticker?'✔':'')+'</td>'
       + '<td class="action-cell">'
         + '<button class="btn btn-edit" onclick="openDrawer(\''+r.id+'\')" title="Bewerken">✎</button> '
         + '<button class="btn btn-copy" onclick="duplicateRow(\''+r.id+'\')" title="Dupliceren">⧉</button> '
@@ -1076,7 +1078,7 @@ function renderTable() {
       if (a === noVrcKey) return 1; if (b === noVrcKey) return -1;
       return a.localeCompare(b);
     });
-    const COL_COUNT = 25;
+    const COL_COUNT = 26;
     keys.forEach(k => {
       const grp = groups.get(k);
       const sumPlanned = grp.reduce((s,r)=>s+N(r.geplande_aantallen),0);
@@ -1343,8 +1345,14 @@ const BEDRUKKING_OPTIES = [
       {f:'wie_betaald', label:'Wie betaald', type:'wie'},
       {f:'prijs', label:'Wat rekenen (€)', type:'num'},
   ]},
-  { key:'sticker', label:'Sticker / karstickers', icon:'🏷️', subFields:[
+  { key:'sticker', label:'Sticker (pot/hoes)', icon:'🏷️', subFields:[
       {f:'op', label:'Op pot/hoes/beide', type:'select', opts: STICKER_OP},
+      {f:'aw', label:'AW artikelnr', type:'text'},
+      {f:'wie_layout', label:'Wie layout', type:'wie'},
+      {f:'wie_productie', label:'Wie productie', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'karsticker', label:'Karsticker', icon:'🛒', subFields:[
       {f:'aw', label:'AW artikelnr', type:'text'},
       {f:'wie_layout', label:'Wie layout', type:'wie'},
       {f:'wie_productie', label:'Wie productie', type:'wie'},
@@ -1975,7 +1983,8 @@ function rapidStartXml(rs) {
       ['AantalFust', r.aantal_fust],
       ['AantalKarBruto', r.aantal_kar_bruto],
       ['Karposter', r.karposter ? 'Ja':'Nee'],
-      ['Karstickers', r.sticker ? 'Ja':'Nee'],
+      ['Sticker (pot/hoes)', r.sticker ? 'Ja':'Nee'],
+      ['Karsticker', r.karsticker ? 'Ja':'Nee'],
       ['Etiket', r.etiket ? 'Ja':'Nee'],
       ['Hoes', r.hoes ? 'Ja':'Nee'],
       ['Doos', r.doos ? 'Ja':'Nee'],

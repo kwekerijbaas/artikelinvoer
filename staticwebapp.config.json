@@ -12,7 +12,7 @@
     }
   },
   "routes": [
-    { "route": "/", "rewrite": "/opzet_afname.html" },
+    { "route": "/", "rewrite": "/opzet_afname.html", "allowedRoles": ["authenticated"] },
     { "route": "/.auth/login/github", "statusCode": 404 },
     { "route": "/.auth/login/twitter", "statusCode": 404 },
     { "route": "/*", "allowedRoles": ["authenticated"] }

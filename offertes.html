@@ -120,7 +120,12 @@ header .sub{opacity:.8;font-size:.8rem}
   cursor:pointer;user-select:none;white-space:nowrap
 }
 .tbl th:hover{background:var(--groen-dark)}
+.tbl th[data-col]::after{content:' ↕';opacity:.35;font-size:.85em;margin-left:2px}
+.tbl th[data-col][data-sort="asc"]::after{content:' ▲';opacity:1}
+.tbl th[data-col][data-sort="desc"]::after{content:' ▼';opacity:1}
+.tbl th[data-col][data-sort]{background:var(--groen-dark)}
 .tbl th.no-sort{cursor:default}
+.tbl th.no-sort::after{content:''}
 .tbl td{padding:4px 5px;border-bottom:1px solid #eee;white-space:nowrap}
 .tbl tr:hover td{background:var(--groen-licht)}
 .tbl tr.selected td{background:#fff8e1}
@@ -411,23 +416,29 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       <table class="tbl">
         <thead><tr>
           <th class="no-sort"><input type="checkbox" id="sel-all" onchange="toggleSelectAll(this.checked)"></th>
-          <th onclick="sortBy('status')">St.</th>
-          <th onclick="sortBy('vrc')">VRC</th>
-          <th onclick="sortBy('klant')">Klant</th>
-          <th onclick="sortBy('eindklant')">Eindklant</th>
-          <th onclick="sortBy('productgroep')">Prod.</th>
-          <th onclick="sortBy('teelt')">Teelt</th>
-          <th onclick="sortBy('potmaat')">Pot</th>
-          <th onclick="sortBy('jaar')">Jaar</th>
-          <th onclick="sortBy('week')">Wk</th>
-          <th onclick="sortBy('verlaaddag')">Verl.</th>
-          <th>Ma</th><th>Di</th><th>Wo</th><th>Do</th><th>Vr</th><th>Za</th><th>Zo</th>
-          <th onclick="sortBy('afgenomen_totaal')">Tot</th>
-          <th onclick="sortBy('prijs')">Prijs</th>
-          <th onclick="sortBy('type_kar')">Kar</th>
-          <th onclick="sortBy('aantal_kar_bruto')">#Kar</th>
-          <th onclick="sortBy('karposter')">KP</th>
-          <th onclick="sortBy('sticker')">St</th>
+          <th data-col="status" onclick="sortBy('status')">St.</th>
+          <th data-col="vrc" onclick="sortBy('vrc')">VRC</th>
+          <th data-col="klant" onclick="sortBy('klant')">Klant</th>
+          <th data-col="eindklant" onclick="sortBy('eindklant')">Eindklant</th>
+          <th data-col="productgroep" onclick="sortBy('productgroep')">Prod.</th>
+          <th data-col="teelt" onclick="sortBy('teelt')">Teelt</th>
+          <th data-col="potmaat" onclick="sortBy('potmaat')">Pot</th>
+          <th data-col="jaar" onclick="sortBy('jaar')">Jaar</th>
+          <th data-col="week" onclick="sortBy('week')">Wk</th>
+          <th data-col="verlaaddag" onclick="sortBy('verlaaddag')">Verl.</th>
+          <th data-col="maandag"  onclick="sortBy('maandag')">Ma</th>
+          <th data-col="dinsdag"  onclick="sortBy('dinsdag')">Di</th>
+          <th data-col="woensdag" onclick="sortBy('woensdag')">Wo</th>
+          <th data-col="donderdag" onclick="sortBy('donderdag')">Do</th>
+          <th data-col="vrijdag"  onclick="sortBy('vrijdag')">Vr</th>
+          <th data-col="zaterdag" onclick="sortBy('zaterdag')">Za</th>
+          <th data-col="zondag"   onclick="sortBy('zondag')">Zo</th>
+          <th data-col="afgenomen_totaal" onclick="sortBy('afgenomen_totaal')">Tot</th>
+          <th data-col="prijs" onclick="sortBy('prijs')">Prijs</th>
+          <th data-col="type_kar" onclick="sortBy('type_kar')">Kar</th>
+          <th data-col="aantal_kar_bruto" onclick="sortBy('aantal_kar_bruto')">#Kar</th>
+          <th data-col="karposter" onclick="sortBy('karposter')">KP</th>
+          <th data-col="sticker" onclick="sortBy('sticker')">St</th>
           <th class="no-sort">Acties</th>
         </tr></thead>
         <tbody id="tbl-body"></tbody>
@@ -973,6 +984,13 @@ function sortBy(col) {
   renderTable();
 }
 
+function updateSortIndicators() {
+  document.querySelectorAll('.tbl th[data-col]').forEach(th => {
+    if (th.dataset.col === sortCol) th.dataset.sort = sortAsc ? 'asc' : 'desc';
+    else th.removeAttribute('data-sort');
+  });
+}
+
 function renderTable() {
   let data = applyFilters(regels);
   if (sortCol) {
@@ -1081,6 +1099,7 @@ function renderTable() {
     html = data.map(rowHtml).join('');
   }
   tbody.innerHTML = html;
+  updateSortIndicators();
 
   $('row-count').textContent = truncated
     ? ('Eerste ' + data.length + ' van ' + totalAfterFilter + ' gefilterde regels (totaal ' + regels.length + ') — verfijn filters/zoek voor meer')

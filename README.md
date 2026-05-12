@@ -98,6 +98,25 @@ Push naar `main` → workflow `.github/workflows/azure-static-web-apps.yml` depl
      "https://opzetafname.kwekerijbaas.nl/.auth/login/aad/callback"
    ```
 
+### Admin-consent op Entra App Registration
+
+Bij eerste gebruik (of na het toevoegen van extra API-permissies) moet een Azure-tenant-admin éénmalig admin-consent geven. Zonder deze stap krijgen niet-admin gebruikers een "Need admin approval"-prompt en lukt de login niet.
+
+**Vereiste rol**: Global Administrator, Cloud Application Administrator, of Application Administrator.
+
+1. Azure Portal → **Entra ID** → **App registrations** → zoek `opzet-afname-app` (of de Application (client) ID die als `AAD_CLIENT_ID` in de SWA-configuratie staat).
+2. Open de app → **API permissions** in het linkermenu.
+3. Klik bovenaan op **"Grant admin consent for [tenantnaam]"** en bevestig.
+4. Onder *Status* moeten alle permissies (minimaal `User.Read`) een groen vinkje krijgen.
+
+**Optioneel — toegang beperken tot specifieke gebruikers/groepen**:
+
+1. Entra ID → **Enterprise applications** → dezelfde app openen.
+2. *Properties* → **Assignment required? = Yes**.
+3. *Users and groups* → voeg de juiste personen of een groep toe.
+
+**Verifiëren**: open een incognito-tab op `https://opzetafname.kwekerijbaas.nl`, log in als niet-admin testgebruiker — de consent-prompt moet weg zijn en de gebruiker landt direct op `opzet_afname.html`.
+
 ### Toekomstige uitbreidingen (architectuur)
 
 De gekozen SWA Standard tier ondersteunt een groei-pad naar CRM:

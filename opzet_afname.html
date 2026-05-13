@@ -1027,13 +1027,7 @@ function initLookups() {
   fillDatalist('dl-teeltspecificatie', DATA.teeltspecificatie || []);
   fillDatalist('dl-verlaaddag', DATA.verlaaddagen);
 
-  // Agriware-artikelen suggesties voor drawer-bedrukkingvelden
-  fillDatalistFromLookup('dl-sticker', AGRIWARE_ARTIKELEN.stickers || []);
-  fillDatalistFromLookup('dl-etiket', AGRIWARE_ARTIKELEN.etiketten || []);
-  fillDatalistFromLookup('dl-hoes', AGRIWARE_ARTIKELEN.hoezen || []);
-  fillDatalistFromLookup('dl-doos', AGRIWARE_ARTIKELEN.dozen || []);
-  fillDatalistFromLookup('dl-draagbeugel', AGRIWARE_ARTIKELEN.draagbeugel || []);
-  fillDatalistFromLookup('dl-tgw', DATA.tgw || []);
+  // (Agriware-artikelen datalists worden gevuld door refreshAgriwareDatalists na renderBedrukCards)
 
   // Week selects (1..53)
   const weekOpts = Array.from({length:53}, (_,i) => '<option value="'+(i+1)+'">'+(i+1)+'</option>').join('');
@@ -1059,6 +1053,31 @@ function initLookups() {
 
   // Render bedrukkings-opties cards
   renderBedrukCards();
+
+  // Datalists nogmaals vullen na render (defensief — sommige browsers herevalueren
+  // datalist alleen wanneer opties bestaan op het moment dat de input rendert)
+  refreshAgriwareDatalists();
+}
+
+function refreshAgriwareDatalists() {
+  const fillSimple = (id, items) => {
+    const dl = $(id); if (!dl) return;
+    dl.innerHTML = (items || []).map(it => {
+      const code = it.code || '';
+      const oms = it.omschrijving || it.naam || '';
+      // Format identiek aan refreshTrayDatalist (die werkt):
+      // value = de te tonen tekst, label = "value — extra"
+      const value = oms || code;
+      const label = code && oms ? (oms + ' — ' + code) : value;
+      return '<option value="'+esc(value)+'">'+esc(label)+'</option>';
+    }).join('');
+  };
+  fillSimple('dl-sticker', AGRIWARE_ARTIKELEN.stickers);
+  fillSimple('dl-etiket', AGRIWARE_ARTIKELEN.etiketten);
+  fillSimple('dl-hoes', AGRIWARE_ARTIKELEN.hoezen);
+  fillSimple('dl-doos', AGRIWARE_ARTIKELEN.dozen);
+  fillSimple('dl-draagbeugel', AGRIWARE_ARTIKELEN.draagbeugel);
+  fillSimple('dl-tgw', DATA.tgw);
 }
 
 function refreshTrayDatalist() {

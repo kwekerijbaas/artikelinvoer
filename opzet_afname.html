@@ -81,12 +81,33 @@ header .sub{opacity:.8;font-size:.8rem}
 .kpi-sub{font-size:.72rem;color:#888}
 .kpi-icon{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:6px;background:var(--groen-licht);display:flex;align-items:center;justify-content:center;color:var(--groen-dark);font-size:.95rem}
 .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.chart-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px}
+.chart-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px}
 .chart-card.chart-full{grid-column:1/-1}
-.chart-title{font-size:.7rem;text-transform:uppercase;color:#666;font-weight:700;letter-spacing:.5px;margin-bottom:10px}
-.chart-body{min-height:260px}
+.chart-title{font-size:.7rem;text-transform:uppercase;color:#666;font-weight:700;letter-spacing:.5px;margin-bottom:8px}
+.chart-body{min-height:200px}
 .chart-body svg text{font-family:var(--font)}
 .chart-empty{color:#999;font-size:.85rem;padding:30px;text-align:center}
+.chart-legend{display:flex;gap:14px;font-size:.72rem;color:#555;margin-bottom:8px;flex-wrap:wrap}
+.chart-legend span{display:flex;align-items:center;gap:5px}
+.chart-legend i{display:inline-block;width:10px;height:10px;border-radius:2px}
+/* Dashboard filters */
+.dash-filters{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;padding:10px 12px;background:var(--groen-licht);border:1px solid var(--border);border-radius:6px;margin-bottom:12px}
+.dash-filter{display:flex;flex-direction:column;gap:3px}
+.dash-filter label{font-size:.68rem;text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:#555}
+.dash-filter select{padding:4px 6px;border:1px solid var(--border);border-radius:4px;font:inherit;font-size:.82rem;background:#fff}
+.dash-filter-status{flex:1;min-width:300px}
+.status-chips{display:flex;gap:4px;flex-wrap:wrap}
+.status-chip{padding:2px 7px;border-radius:10px;font-size:.7rem;font-weight:700;border:1px solid #bbb;background:#fff;cursor:pointer;user-select:none;color:#777}
+.status-chip.active{color:#fff;border-color:transparent}
+.status-chip.cat-def.active{background:#2e7d32}
+.status-chip.cat-wip.active{background:#ef6c00}
+.status-chip.cat-out.active{background:#666}
+.dash-meta{margin-left:auto;font-size:.78rem;color:#555;align-self:flex-end;font-weight:600}
+.dash-banner{font-size:.8rem;padding:8px 12px;border-radius:6px;margin-bottom:12px;background:#fff8e1;border:1px solid #ffe082;color:#7a5b00;display:none}
+.dash-banner.show{display:block}
+.kpi-value.muted{color:#aaa}
+.kpi-sub.warn{color:#e65100;font-weight:600}
+.kpi-sub.danger{color:var(--rood);font-weight:600}
 @media (max-width:900px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
   .chart-row{grid-template-columns:1fr}
@@ -468,45 +489,81 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 
   <!-- Dashboard -->
   <div class="panel" id="panel-dashboard">
+    <div class="dash-filters">
+      <div class="dash-filter">
+        <label for="dash-jaar">Jaar</label>
+        <select id="dash-jaar" onchange="renderDashboard()"></select>
+      </div>
+      <div class="dash-filter">
+        <label for="dash-periode">Periode</label>
+        <select id="dash-periode" onchange="renderDashboard()">
+          <option value="all">Heel jaar</option>
+          <option value="thisweek">Deze week (wk <span id="dash-cur-wk">-</span>)</option>
+          <option value="4w" selected>Vanaf nu, 4 weken</option>
+          <option value="8w">Vanaf nu, 8 weken</option>
+          <option value="12w">Vanaf nu, 12 weken</option>
+        </select>
+      </div>
+      <div class="dash-filter dash-filter-status">
+        <label>Status filter (klik om aan/uit)</label>
+        <div class="status-chips" id="dash-status-chips"></div>
+      </div>
+      <div class="dash-meta" id="dash-meta">— regels in scope</div>
+    </div>
+
+    <div class="dash-banner" id="dash-banner"></div>
+
     <div class="kpi-row">
       <div class="kpi-card">
-        <div class="kpi-label">Orderregels</div>
+        <div class="kpi-label">Regels in scope</div>
         <div class="kpi-value" id="kpi-regels">0</div>
-        <div class="kpi-sub">totaal in systeem</div>
-        <div class="kpi-icon">🛒</div>
+        <div class="kpi-sub" id="kpi-regels-sub">unieke combinaties</div>
+        <div class="kpi-icon">📋</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Geplande aantallen</div>
         <div class="kpi-value" id="kpi-aantallen">0</div>
-        <div class="kpi-sub">planten</div>
-        <div class="kpi-icon">📦</div>
+        <div class="kpi-sub" id="kpi-aantallen-sub">planten</div>
+        <div class="kpi-icon">🌱</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Geplande omzet</div>
-        <div class="kpi-value" id="kpi-omzet">€ 0</div>
-        <div class="kpi-sub">aantal × prijs</div>
-        <div class="kpi-icon">📈</div>
+        <div class="kpi-label">Karren bruto</div>
+        <div class="kpi-value" id="kpi-karren">0</div>
+        <div class="kpi-sub" id="kpi-karren-sub">aantal_kar_bruto</div>
+        <div class="kpi-icon">🚛</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Klanten</div>
-        <div class="kpi-value" id="kpi-klanten">0</div>
-        <div class="kpi-sub">unieke afnemers</div>
-        <div class="kpi-icon">👥</div>
+        <div class="kpi-label">Concepten in scope</div>
+        <div class="kpi-value" id="kpi-concepten">0</div>
+        <div class="kpi-sub" id="kpi-concepten-sub">status nog niet definitief</div>
+        <div class="kpi-icon">📝</div>
       </div>
     </div>
+
+    <div class="chart-card chart-full">
+      <div class="chart-title">Werkdruk per week, gestapeld per status</div>
+      <div class="chart-legend">
+        <span><i style="background:#2e7d32"></i>Definitief (A/AD/AI)</span>
+        <span><i style="background:#ef6c00"></i>In behandeling (B/D/I/O/V)</span>
+        <span><i style="background:#999"></i>Vervallen/leeg (X/Z)</span>
+      </div>
+      <div class="chart-body" id="chart-week"></div>
+    </div>
+
     <div class="chart-row">
       <div class="chart-card">
-        <div class="chart-title">Geplande aantallen per week</div>
-        <div class="chart-body" id="chart-week"></div>
+        <div class="chart-title">Verlaaddag-belasting (top 30 dagen in scope)</div>
+        <div class="chart-body" id="chart-verlaad"></div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Top 10 klanten op omzet</div>
-        <div class="chart-body" id="chart-klanten"></div>
+        <div class="chart-title">Top 15 teelten</div>
+        <div class="chart-body" id="chart-teelt"></div>
       </div>
     </div>
+
     <div class="chart-card chart-full">
-      <div class="chart-title">Verdeling per productgroep</div>
-      <div class="chart-body" id="chart-prod"></div>
+      <div class="chart-title">Top 10 klanten</div>
+      <div class="chart-body" id="chart-klanten"></div>
     </div>
   </div>
 </div>
@@ -995,46 +1052,234 @@ function showTab(name) {
 }
 
 /* === DASHBOARD === */
+const STATUS_LABELS = {
+  A:'Raamcontract definitief', AD:'Definitief — derden', AI:'Definitief — inkoop',
+  B:'Verkooporder voor planning', D:'Daghandel-overleg', I:'Inkoop in behandeling',
+  O:'In behandeling', V:'Aanvraag',
+  X:'Vervallen', Z:'Leeg'
+};
+const STATUS_CAT = {
+  A:'def', AD:'def', AI:'def',
+  B:'wip', D:'wip', I:'wip', O:'wip', V:'wip',
+  X:'out', Z:'out'
+};
+const STATUS_COLOR = { def:'#2e7d32', wip:'#ef6c00', out:'#999' };
+const DEFAULT_STATUS_FILTER = ['A','AD','AI','B','D','I','O','V'];
+let dashStatusFilter = new Set(DEFAULT_STATUS_FILTER);
+let dashFiltersInited = false;
+
+function isoWeekOf(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return { year: d.getUTCFullYear(), week: Math.ceil((((d - yearStart) / 86400000) + 1) / 7) };
+}
+
+function initDashboardFilters() {
+  const jaren = [...new Set(regels.map(r => N(r.jaar)).filter(j => j > 0))].sort((a,b) => b-a);
+  const jaarSel = $('dash-jaar');
+  const curIso = isoWeekOf(new Date());
+  jaarSel.innerHTML = jaren.length
+    ? jaren.map(j => '<option value="'+j+'">'+j+'</option>').join('')
+    : '<option value="">(geen jaren)</option>';
+  if (jaren.includes(curIso.year)) jaarSel.value = curIso.year;
+  const chipBox = $('dash-status-chips');
+  chipBox.innerHTML = Object.keys(STATUS_LABELS).map(code => {
+    const cat = STATUS_CAT[code];
+    const active = dashStatusFilter.has(code);
+    return '<span class="status-chip cat-'+cat+(active?' active':'')+'" data-status="'+code+'" onclick="toggleDashStatus(\''+code+'\')" title="'+esc(STATUS_LABELS[code])+'">'+code+'</span>';
+  }).join('');
+  const wkLabel = $('dash-cur-wk');
+  if (wkLabel) wkLabel.textContent = curIso.week;
+  dashFiltersInited = true;
+}
+
+function toggleDashStatus(code) {
+  if (dashStatusFilter.has(code)) dashStatusFilter.delete(code);
+  else dashStatusFilter.add(code);
+  document.querySelectorAll('#dash-status-chips .status-chip').forEach(c => {
+    c.classList.toggle('active', dashStatusFilter.has(c.dataset.status));
+  });
+  renderDashboard();
+}
+
+function getDashboardScope() {
+  const jaar = N($('dash-jaar').value);
+  const periode = $('dash-periode').value;
+  const curIso = isoWeekOf(new Date());
+  let wkFrom = 1, wkTo = 53;
+  if (periode === 'thisweek') { wkFrom = curIso.week; wkTo = curIso.week; }
+  else if (periode === '4w') { wkFrom = curIso.week; wkTo = curIso.week + 3; }
+  else if (periode === '8w') { wkFrom = curIso.week; wkTo = curIso.week + 7; }
+  else if (periode === '12w') { wkFrom = curIso.week; wkTo = curIso.week + 11; }
+  const filtered = regels.filter(r => {
+    if (jaar && N(r.jaar) !== jaar) return false;
+    if (!dashStatusFilter.has(r.status)) return false;
+    if (periode !== 'all') {
+      const w = N(r.week);
+      if (w < wkFrom || w > wkTo) return false;
+    }
+    return true;
+  });
+  return { filtered, jaar, periode, wkFrom, wkTo, curIso };
+}
+
 function renderDashboard() {
-  const totaalRegels = regels.length;
-  const totaalAantallen = regels.reduce((s,r) => s + N(r.geplande_aantallen), 0);
-  const totaalOmzet = regels.reduce((s,r) => s + N(r.geplande_aantallen) * N(r.prijs), 0);
-  const klantenSet = new Set(regels.map(r => r.klant).filter(Boolean));
-  $('kpi-regels').textContent = totaalRegels.toLocaleString('nl-NL');
-  $('kpi-aantallen').textContent = totaalAantallen.toLocaleString('nl-NL');
-  $('kpi-omzet').textContent = '€ ' + Math.round(totaalOmzet).toLocaleString('nl-NL');
-  $('kpi-klanten').textContent = klantenSet.size.toLocaleString('nl-NL');
+  if (!dashFiltersInited) initDashboardFilters();
+  const scope = getDashboardScope();
+  const { filtered, periode, wkFrom, wkTo } = scope;
 
-  const byWeek = {};
-  regels.forEach(r => {
+  $('dash-meta').textContent = filtered.length.toLocaleString('nl-NL') + ' regels in scope';
+
+  // KPI: regels
+  $('kpi-regels').textContent = filtered.length.toLocaleString('nl-NL');
+  const uniqCombi = new Set(filtered.map(r => (r.teelt||'') + '|' + (r.potmaat||'')));
+  $('kpi-regels-sub').textContent = uniqCombi.size + ' unieke teelt × potmaat';
+
+  // KPI: aantallen (met fallback-melding)
+  const totAant = filtered.reduce((s,r) => s + N(r.geplande_aantallen), 0);
+  const kAant = $('kpi-aantallen'), kAantSub = $('kpi-aantallen-sub');
+  if (totAant > 0) {
+    kAant.textContent = totAant.toLocaleString('nl-NL');
+    kAant.classList.remove('muted');
+    kAantSub.textContent = 'planten in scope';
+    kAantSub.classList.remove('warn');
+  } else {
+    kAant.textContent = '—';
+    kAant.classList.add('muted');
+    kAantSub.textContent = 'nog niet ingevuld';
+    kAantSub.classList.add('warn');
+  }
+
+  // KPI: karren
+  const totKar = filtered.reduce((s,r) => s + N(r.aantal_kar_bruto), 0);
+  const kKar = $('kpi-karren'), kKarSub = $('kpi-karren-sub');
+  if (totKar > 0) {
+    kKar.textContent = totKar.toLocaleString('nl-NL');
+    kKar.classList.remove('muted');
+    kKarSub.textContent = 'bruto karren in scope';
+    kKarSub.classList.remove('warn');
+  } else {
+    kKar.textContent = '—';
+    kKar.classList.add('muted');
+    kKarSub.textContent = 'karberekening leeg';
+    kKarSub.classList.add('warn');
+  }
+
+  // KPI: concepten
+  const concepten = filtered.filter(r => STATUS_CAT[r.status] === 'wip').length;
+  $('kpi-concepten').textContent = concepten.toLocaleString('nl-NL');
+  const conSub = $('kpi-concepten-sub');
+  conSub.classList.toggle('danger', concepten > 0);
+  conSub.textContent = concepten > 0 ? 'regels nog actie vereist' : 'allemaal definitief';
+
+  // Banner als geplande_aantallen leeg
+  const useCount = totAant === 0;
+  const banner = $('dash-banner');
+  if (useCount) {
+    banner.textContent = 'ℹ️ Geplande aantallen zijn nog niet ingevuld — grafieken tonen rij-aantal als proxy. Vul aantallen in om naar volume-weergave te schakelen.';
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+
+  // Chart 1: Werkdruk per week, stacked per status-categorie
+  const weekStack = {};
+  const wkMin = (periode === 'all') ? 1 : wkFrom;
+  const wkMax = (periode === 'all') ? 53 : wkTo;
+  for (let w = wkMin; w <= wkMax; w++) weekStack[w] = {def:0, wip:0, out:0};
+  filtered.forEach(r => {
     const w = N(r.week);
-    if (!w) return;
-    byWeek[w] = (byWeek[w] || 0) + N(r.geplande_aantallen);
+    if (!weekStack[w]) return;
+    const cat = STATUS_CAT[r.status] || 'out';
+    weekStack[w][cat] += useCount ? 1 : N(r.geplande_aantallen);
   });
-  const weeks = Object.keys(byWeek).map(Number).sort((a,b)=>a-b);
-  $('chart-week').innerHTML = renderBarChart(
-    weeks.map(w => ({label: 'wk '+w, value: byWeek[w]})),
-    {vertical: true, color: '#1b5e20'}
-  );
+  const stackData = Object.keys(weekStack).map(w => ({
+    label: 'wk '+w,
+    segments: [
+      {value: weekStack[w].def, color: STATUS_COLOR.def, name: 'Definitief'},
+      {value: weekStack[w].wip, color: STATUS_COLOR.wip, name: 'In behandeling'},
+      {value: weekStack[w].out, color: STATUS_COLOR.out, name: 'Vervallen/leeg'}
+    ]
+  }));
+  $('chart-week').innerHTML = renderStackedBarChart(stackData);
 
+  // Chart 2: Verlaaddag-belasting
+  const byDay = {};
+  filtered.forEach(r => {
+    if (!r.verlaaddag) return;
+    byDay[r.verlaaddag] = (byDay[r.verlaaddag] || 0) + (useCount ? 1 : N(r.aantal_kar_bruto) || 1);
+  });
+  const dayData = Object.entries(byDay).sort((a,b) => a[0].localeCompare(b[0])).slice(0, 30).map(([k,v]) => ({label: fmtShortDate(k), value: v}));
+  $('chart-verlaad').innerHTML = dayData.length
+    ? renderBarChart(dayData, {vertical: true, color: '#5d8ca8'})
+    : '<div class="chart-empty">Geen verlaaddagen in scope</div>';
+
+  // Chart 3: Top 15 teelten
+  const byTeelt = {};
+  filtered.forEach(r => {
+    if (!r.teelt) return;
+    byTeelt[r.teelt] = (byTeelt[r.teelt] || 0) + (useCount ? 1 : N(r.geplande_aantallen));
+  });
+  const teeltData = Object.entries(byTeelt).sort((a,b) => b[1]-a[1]).slice(0, 15).map(([k,v]) => ({label: k, value: v}));
+  $('chart-teelt').innerHTML = teeltData.length
+    ? renderBarChart(teeltData, {vertical: false, colored: true})
+    : '<div class="chart-empty">Geen teelt-data</div>';
+
+  // Chart 4: Top 10 klanten
   const byKlant = {};
-  regels.forEach(r => {
+  filtered.forEach(r => {
     if (!r.klant) return;
-    byKlant[r.klant] = (byKlant[r.klant] || 0) + N(r.geplande_aantallen) * N(r.prijs);
+    byKlant[r.klant] = (byKlant[r.klant] || 0) + (useCount ? 1 : N(r.geplande_aantallen));
   });
-  const topKlanten = Object.entries(byKlant)
-    .sort((a,b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([k,v]) => ({label: k, value: v}));
-  $('chart-klanten').innerHTML = renderBarChart(topKlanten, {vertical: false, colored: true, fmt: 'eur'});
+  const klantData = Object.entries(byKlant).sort((a,b) => b[1]-a[1]).slice(0, 10).map(([k,v]) => ({label: k, value: v}));
+  $('chart-klanten').innerHTML = klantData.length
+    ? renderBarChart(klantData, {vertical: false, colored: true})
+    : '<div class="chart-empty">Geen klantdata</div>';
+}
 
-  const byProd = {};
-  regels.forEach(r => {
-    if (!r.productgroep) return;
-    byProd[r.productgroep] = (byProd[r.productgroep] || 0) + N(r.geplande_aantallen);
+function fmtShortDate(s) {
+  const parts = String(s||'').split('-');
+  if (parts.length !== 3) return s;
+  const months = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  return parts[2] + ' ' + (months[N(parts[1]) - 1] || '');
+}
+
+function renderStackedBarChart(data) {
+  if (!data.length) return '<div class="chart-empty">Geen data</div>';
+  const W = 800, H = 220, padL = 40, padR = 8, padT = 10, padB = 30;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+  const stepX = innerW / data.length;
+  const barW = Math.max(2, stepX * 0.75);
+  const totals = data.map(d => d.segments.reduce((s,seg) => s + seg.value, 0));
+  const max = Math.max(...totals, 1);
+  const tickN = 4;
+  let ticks = '';
+  for (let i = 0; i <= tickN; i++) {
+    const y = padT + innerH * (1 - i/tickN);
+    const v = max * i / tickN;
+    ticks += '<line x1="'+padL+'" x2="'+(W-padR)+'" y1="'+y+'" y2="'+y+'" stroke="#eee"/>';
+    ticks += '<text x="'+(padL-6)+'" y="'+(y+4)+'" font-size="10" fill="#888" text-anchor="end">'+(v>=1000?Math.round(v/1000)+'k':Math.round(v))+'</text>';
+  }
+  let bars = '', labels = '';
+  const labelStep = Math.max(1, Math.ceil(data.length / 18));
+  data.forEach((d, i) => {
+    const x = padL + stepX*i + (stepX-barW)/2;
+    let stackedH = 0;
+    d.segments.forEach(seg => {
+      if (!seg.value) return;
+      const h = innerH * (seg.value / max);
+      const y = padT + innerH - stackedH - h;
+      stackedH += h;
+      bars += '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+h+'" fill="'+seg.color+'"><title>'+esc(d.label)+' — '+seg.name+': '+seg.value.toLocaleString('nl-NL')+'</title></rect>';
+    });
+    if (i % labelStep === 0) {
+      labels += '<text x="'+(x+barW/2)+'" y="'+(H-padB+14)+'" font-size="10" fill="#555" text-anchor="middle">'+esc(d.label.replace('wk ',''))+'</text>';
+    }
   });
-  const prodData = Object.entries(byProd).sort((a,b) => b[1] - a[1]).map(([k,v]) => ({label: k, value: v}));
-  $('chart-prod').innerHTML = renderBarChart(prodData, {vertical: true, color: '#8bc34a'});
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" preserveAspectRatio="xMidYMin meet">'+ticks+bars+labels+'</svg>';
 }
 
 function renderBarChart(data, opts) {
@@ -1305,6 +1550,8 @@ function refreshJaarSelects() {
     el.innerHTML = first + opts;
     el.value = cur;
   });
+  // Dashboard jaar-select repopulates op volgende renderDashboard
+  dashFiltersInited = false;
 }
 
 function vrcCounts() {

@@ -2,7 +2,11 @@
 
 Doel: zorgen dat de orderregels in `opzet_afname.html` zo dicht mogelijk aansluiten bij wat Business Central (BC) verwacht in zijn RapidStart Configuration Package, zodat de hand-over straks foutloos verloopt.
 
-Bron: `Standaard12_05_2026_22_01_11_Verkooporderkop_en_regels.xlsx` (geleverd door VWC), 59 voorbeeld-orderkoppen + 266 voorbeeld-regels uit jullie BC-tenant.
+Bron: `Standaard12_05_2026_22_01_11_Verkooporderkop_en_regels.xlsx`, 59 voorbeeld-orderkoppen + 266 voorbeeld-regels uit jullie BC-tenant.
+
+Partners:
+- **Mprise** — Agriware / Business Central RapidStart-partner → richt de inhoudelijke vragen in dit document (mapping, velden, raamcontracten, masterdata) aan hen.
+- **VWC** — systeembeheer-partner → tenant-toegang, exports uit BC, Entra App Registration, SWA-config.
 
 ## 1. Wat zit er in de RapidStart export
 
@@ -43,10 +47,10 @@ Belangrijk: van de 286 / 368 mogelijke velden wordt maar een fractie écht ingev
 | `Btw-bedrijfsboekingsgroep` | — | 🟦 klant-default | Idem |
 | `Land-/regiocode btw` | `r.afzetland` → ISO-code | 🟡 partial | Wij: "Duitsland", BC: `DE` → ISO-omzetting nodig |
 | `Klantboekingsgroep` | — | 🟦 klant-default | `KLANT`. Van klant |
-| `Sneleigenschap 1`, `2`, `3` | — | ❓ onbekend | Waarden `A/N/AF/HD01/N3`, `NEE/JA`, `JA/NEE`. VWC: wat zijn dit? |
+| `Sneleigenschap 1`, `2`, `3` | — | ❓ onbekend | Waarden `A/N/AF/HD01/N3`, `NEE/JA`, `JA/NEE`. Mprise: wat zijn dit? |
 | `Status` / `Status code` | — | 🟦 BC | Workflow-managed (`Vrijgegeven` / `Open`, `ORDER-2 GEREEDHAL`, etc.) |
 
-**Legenda**: ✅ klaar · 🟡 partial · ⚠️ gap (we hebben info maar verkeerde vorm) · ❌ ontbreekt · 🟦 BC vult zelf · ❓ vraag voor VWC
+**Legenda**: ✅ klaar · 🟡 partial · ⚠️ gap (we hebben info maar verkeerde vorm) · ❌ ontbreekt · 🟦 BC vult zelf · ❓ vraag voor Mprise
 
 ### 2.2 Verkoopregel (Sales Line)
 
@@ -71,7 +75,7 @@ Belangrijk: van de 286 / 368 mogelijke velden wordt maar een fractie écht ingev
 | `Interne Leverdatum` | `r.losdag` → datum | ⚠️ gap | |
 | `Interne levertijd` | — | ❌ ontbreekt | |
 | `Raamcontractnr.` | `r.vrc` | ✅ **key field** | Wij: `VRC-02330`, BC: `VRC-02330`. **Exacte match** |
-| `Raamcontractregelnr.` | — | ❓ VWC | Welke regel in het BC-raamcontract refereert onze regel? |
+| `Raamcontractregelnr.` | — | ❓ Mprise | Welke regel in het BC-raamcontract refereert onze regel? |
 | `Fustcode` | `r.fust_incl_excl` ? | 🟡 partial | BC: `TRAY 408 (8) EXCL.`, `LOS (1)`. Wij hebben los: `type_kar`, `aantal_per_fust` etc. |
 | `Fustvariant` | — | ❌ ontbreekt | `408DPZW`, `306NPZW`, `LOS` |
 | `Fustgroep` | — | ❌ ontbreekt | `TRAYS`, `POTTEN`, `PACKS` |
@@ -125,13 +129,13 @@ Voor een **foutloze** koppeling moeten de volgende lijsten uit Agriware geïmpor
 
 Dit is de meest kritieke vraag. Drie opties:
 
-**Optie A — VRC-koppeling**: Als wij `Raamcontractnr.` correct meesturen, kan BC dan het artikelnr afleiden uit de definitie van het raamcontract? Te bevestigen met VWC.
+**Optie A — VRC-koppeling**: Als wij `Raamcontractnr.` correct meesturen, kan BC dan het artikelnr afleiden uit de definitie van het raamcontract? Te bevestigen met Mprise.
 
 **Optie B — Per-VRC mapping in onze masterdata**: Wanneer Agriware ons een VRC-lijst geeft, neemt die ook het bijhorende BC-artikelnr + variant + geslacht mee. Dan stuurt onze app `Nr.` + `Variant` + `Geslacht` rechtstreeks mee.
 
 **Optie C — Lookup via masterdata-artikellijst (`index.html`)**: Onze `index.html` heeft een artikellijst (347 items) met combinatie teelt + potmaat + kleur → artikelnr. Mits die exact overeenkomt met BC's artikelmaster.
 
-Aanbeveling: **vraag VWC om Optie A te bevestigen**. Als BC het zelf doet via Raamcontract is verreweg het robuustst. Anders Optie B (Agriware-import met BC-velden meegestuurd).
+Aanbeveling: **vraag Mprise om Optie A te bevestigen**. Als BC het zelf doet via Raamcontract is verreweg het robuustst. Anders Optie B (Agriware-import met BC-velden meegestuurd).
 
 ## 5. Verbetervoorstellen voor `opzet_afname.html`
 
@@ -198,7 +202,7 @@ Migratie: bestaande regels mappen op naam → nieuwe K-code. Niet-mappable regel
 
 Te valideren door een gegenereerde XML te importeren in de BC-sandbox via *Configuration Packages → Import Package → Apply Package*.
 
-## 6. Open vragen voor VWC
+## 6. Open vragen voor Mprise
 
 1. **VRC → artikelnr**: Leidt BC `Nr.`, `Variant`, `Geslacht` af uit `Raamcontractnr.` zodra we die meesturen? Of moeten wij die velden zelf vullen?
 2. **`Raamcontractregelnr.`**: Hoe bepalen we welke regel binnen het VRC een nieuwe order/aanvraag matcht? Per week-combinatie?
@@ -211,7 +215,7 @@ Te valideren door een gegenereerde XML te importeren in de BC-sandbox via *Confi
 
 ## 7. Aanbevolen volgorde
 
-1. **VWC beantwoordt open vragen** (sectie 6)
+1. **Mprise beantwoordt open vragen** (sectie 6)
 2. **Agriware-imports uitbreiden**: bijwerken `openLookupModal()` om nieuwe lijsten te accepteren (verzendcodes, locatiecodes, fustmasterdata, etc.)
 3. **Klant-record migratie** (klantnr verplicht)
 4. **Drawer-UI uitbreiding** (sectie 5.2)

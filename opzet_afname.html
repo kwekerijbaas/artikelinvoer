@@ -2784,15 +2784,19 @@ function refreshStatusSelects() {
 function fillDatalistFromLookup(id, items) {
   const dl = $(id); if (!dl) return;
   dl.innerHTML = items.map(it => {
-    const code = it.code || '';
-    const naam = it.naam || it.omschrijving || '';
-    // Voor artikel-achtige items (alleen omschrijving, geen naam): composite value
-    // zodat typen op zowel code als beschrijving filtert (Chrome filtert op value-attr).
-    // Voor klant-achtige items (naam aanwezig): value=naam, behoud bestaand gedrag.
-    const useComposite = !it.naam && it.omschrijving && code;
-    const value = useComposite ? (code + ' — ' + naam) : (naam || code);
-    const label = (code && naam) ? (code + ' — ' + naam) : value;
-    return '<option value="'+esc(value)+'">'+esc(label)+'</option>';
+    // Browsers filteren datalist op prefix-match van het value-attribuut.
+    // Voor artikel-items ({code, omschrijving}) zetten we de omschrijving als
+    // value zodat typen "ET" of "ST" matcht. Code komt in de tekstinhoud
+    // als hint. Voor klant-items ({code, naam}) blijft het bestaande
+    // gedrag (value=naam, label="code — naam").
+    if (it.omschrijving && !it.naam) {
+      const v = it.omschrijving;
+      const lbl = it.code ? (it.omschrijving + '  ·  ' + it.code) : v;
+      return '<option value="'+esc(v)+'">'+esc(lbl)+'</option>';
+    }
+    const v = it.naam || it.code || '';
+    const lbl = it.code ? (it.code + ' — ' + (it.naam || '')) : v;
+    return '<option value="'+esc(v)+'">'+esc(lbl)+'</option>';
   }).join('');
 }
 

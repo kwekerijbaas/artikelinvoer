@@ -283,6 +283,38 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 .comp-add-row .btn{padding:5px 10px;font-size:.78rem}
 .empty-mix{padding:14px;text-align:center;color:#999;font-size:.82rem;font-style:italic}
 
+/* Kar-component panelen (artikel met uitklapbare details + bedrukking) */
+.comp-panel{border:1px solid var(--border);border-radius:5px;background:#fff;margin-bottom:6px;overflow:hidden}
+.comp-panel.open{border-color:var(--groen)}
+.comp-head{
+  display:flex;align-items:center;gap:7px;padding:6px 8px;cursor:pointer;
+  background:#f7f9f6;font-size:.8rem
+}
+.comp-panel.open .comp-head{background:var(--groen-licht)}
+.comp-head .comp-chevron{color:var(--groen-dark);font-size:.7rem;width:10px}
+.comp-head .swatch{width:13px;height:13px;border-radius:3px;flex-shrink:0}
+.comp-head .comp-naam{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.comp-head .comp-nr{font-family:monospace;font-size:.7rem;color:#888;flex:1}
+.comp-head .comp-bedruk-badge{
+  background:var(--blauw);color:#fff;font-size:.65rem;font-weight:700;
+  padding:1px 5px;border-radius:8px
+}
+.comp-head .comp-q{
+  width:62px;padding:3px 5px;border:1px solid var(--border);border-radius:3px;
+  font-size:.78rem;text-align:right;font-variant-numeric:tabular-nums;font-weight:600
+}
+.comp-head .comp-q-lbl{font-size:.7rem;color:#888}
+.comp-head .x{background:none;border:none;color:var(--rood);font-size:1.05rem;cursor:pointer;padding:0 2px;line-height:1}
+.comp-body{display:none;padding:8px;border-top:1px solid var(--border)}
+.comp-panel.open .comp-body{display:block}
+.comp-fields{margin-bottom:8px}
+.comp-bedruk{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+@media (max-width:780px){.comp-bedruk{grid-template-columns:1fr 1fr}}
+.comp-bedruk .bedruk-card{margin:0}
+.comp-bedruk .bedruk-body{display:none}
+.comp-bedruk .bedruk-card.actief .bedruk-body{display:block}
+.comp-bedruk .bedruk-grid{grid-template-columns:1fr 1fr}
+
 /* Image thumbnails + lightbox */
 .thumb{
   width:40px;height:40px;object-fit:cover;border-radius:4px;
@@ -637,36 +669,12 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       </div>
     </div>
 
-    <div class="subhead">Product</div>
+    <div class="subhead">Logistiek &amp; Planning</div>
     <div class="form-grid">
-      <div class="form-group">
-        <label>Productgroep</label>
-        <select id="d-productgroep"><option value=""></option></select>
-      </div>
-      <div class="form-group">
-        <label>Bloeistadium</label>
-        <select id="d-bloeistadium"><option value=""></option></select>
-      </div>
-      <div class="form-group">
-        <label>Potmaat</label>
-        <input id="d-potmaat" type="text" list="dl-potmaat" autocomplete="off">
-      </div>
       <div class="form-group">
         <label>Planningsgroep</label>
         <input id="d-planningsgroep" type="text" list="dl-planningsgroep" autocomplete="off">
       </div>
-      <div class="form-group span2">
-        <label>Teelt</label>
-        <input id="d-teelt" type="text" list="dl-teelt" autocomplete="off">
-      </div>
-      <div class="form-group span2">
-        <label>Teeltspecificatie (vrije tekst)</label>
-        <input id="d-teeltspecificatie" type="text" list="dl-teeltspecificatie" autocomplete="off">
-      </div>
-    </div>
-
-    <div class="subhead">Logistiek &amp; Prijs</div>
-    <div class="form-grid">
       <div class="form-group">
         <label>Jaar *</label>
         <select id="d-jaar"><option value="">—</option></select>
@@ -686,10 +694,6 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       <div class="form-group">
         <label>Actiedag klant</label>
         <input id="d-actiedag" type="text">
-      </div>
-      <div class="form-group">
-        <label>Prijs (€)</label>
-        <input id="d-prijs" type="number" step="0.01" min="0">
       </div>
       <div class="form-group">
         <label>Af tuin</label>
@@ -733,12 +737,8 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       </div>
     </div>
 
-    <div class="subhead">Mix-kar samenstelling</div>
-    <div class="mix-mode">
-      <label><input type="radio" name="mix-mode" value="single" checked onchange="setMixMode('single')"> Enkelvoudige regel (1 product)</label>
-      <label><input type="radio" name="mix-mode" value="mix" onchange="setMixMode('mix')"> Mix-kar (meerdere componenten)</label>
-    </div>
-    <div class="mix-box" id="mix-box">
+    <div class="subhead">Artikelen op de kar</div>
+    <div class="mix-box show" id="mix-box">
       <div class="mix-cap" id="mix-cap">
         <span><strong id="mix-filled">0</strong> / <strong id="mix-cap-total">0</strong> planten in kar (<span id="mix-pct">0</span>%)</span>
         <div class="mix-bar"><div class="mix-bar-fill" id="mix-bar-fill" style="width:0%"></div></div>
@@ -959,6 +959,8 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 <datalist id="dl-teelt"></datalist>
 <datalist id="dl-teeltspecificatie"></datalist>
 <datalist id="dl-verlaaddag"></datalist>
+<datalist id="dl-productgroep"></datalist>
+<datalist id="dl-bloeistadium"></datalist>
 <datalist id="dl-tray"></datalist>
 <datalist id="dl-sticker"></datalist>
 <datalist id="dl-etiket"></datalist>
@@ -1033,8 +1035,6 @@ function initLookups() {
   fillSelect('d-status', DATA.statussen, s => ({value:s.code, text:s.code+' — '+s.omschrijving}));
   // (IOR is nu een tekstveld met datalist — wordt gevuld via refreshIorDatalists)
   fillSelect('d-verkoper', DATA.verkopers);
-  fillSelect('d-productgroep', DATA.productgroepen);
-  fillSelect('d-bloeistadium', DATA.bloeistadia);
   fillSelect('d-transport', DATA.transport);
   fillSelect('d-fust_incl_excl', DATA.fust_incl_excl);
   fillSelect('d-type_kar', DATA.kartypes);
@@ -1049,6 +1049,8 @@ function initLookups() {
   fillDatalist('dl-teelt', DATA.teelt || []);
   fillDatalist('dl-teeltspecificatie', DATA.teeltspecificatie || []);
   fillDatalist('dl-verlaaddag', DATA.verlaaddagen);
+  fillDatalist('dl-productgroep', DATA.productgroepen);
+  fillDatalist('dl-bloeistadium', DATA.bloeistadia);
 
   // (Agriware-artikelen datalists worden gevuld door refreshAgriwareDatalists na renderBedrukCards)
 
@@ -1519,8 +1521,8 @@ function renderTable() {
       + '<td>'+esc(r.productgroep)+'</td>'
       + '<td title="'+esc(mixTooltip(r) || r.teeltspecificatie)+'">'
         + esc(r.teelt)
-        + (r.mix_componenten && r.mix_componenten.length
-            ? ' <span class="mix-badge" title="Mix-kar: '+r.mix_componenten.length+' componenten">MIX '+r.mix_componenten.length+'</span>'
+        + ((regelComponenten(r).length > 1)
+            ? ' <span class="mix-badge" title="Kar met '+regelComponenten(r).length+' artikelen">'+regelComponenten(r).length+' art.</span>'
             : '')
         + '</td>'
       + '<td>'+esc(r.potmaat)+'</td>'
@@ -1598,16 +1600,24 @@ function statusLabel(code) {
   return s ? s.code + ' — ' + s.omschrijving : (code || '');
 }
 
+// Componenten van een regel ophalen — ondersteunt nieuw + oud formaat
+function regelComponenten(r) {
+  if (Array.isArray(r.componenten) && r.componenten.length) return r.componenten;
+  if (Array.isArray(r.mix_componenten) && r.mix_componenten.length) return r.mix_componenten;
+  return [];
+}
 function mixSummaryString(r) {
-  if (!r.mix_componenten || !r.mix_componenten.length) return '';
-  return r.mix_componenten.map(c =>
+  const comps = regelComponenten(r);
+  if (!comps.length) return '';
+  return comps.map(c =>
     (c.artikelnr ? c.artikelnr+' ' : '') + (c.naam || c.teelt || '?') +
     ' [' + (c.potmaat||'-') + (c.kleur ? ' '+c.kleur : '') + ']: ' + N(c.aantal_per_kar)
   ).join(' | ');
 }
 function mixTooltip(r) {
-  if (!r.mix_componenten || !r.mix_componenten.length) return '';
-  return 'Mix-kar:\n' + r.mix_componenten.map(c =>
+  const comps = regelComponenten(r);
+  if (!comps.length) return '';
+  return 'Kar — ' + comps.length + ' artikel(en):\n' + comps.map(c =>
     '• ' + (c.naam || c.teelt || c.artikelnr || '?') + ' [' + (c.potmaat||'-') + ']' +
     (c.kleur ? ' '+c.kleur : '') + ' — ' + N(c.aantal_per_kar) + ' planten'
   ).join('\n');
@@ -1707,9 +1717,16 @@ function bulkDelete() {
   renderTable();
   toast('Regels verwijderd');
 }
+// Diepe kopie van een regel — componenten[] array mag niet gedeeld worden
+function cloneRegel(r, overrides) {
+  const copy = Object.assign({}, r, overrides || {});
+  if (Array.isArray(r.componenten)) copy.componenten = r.componenten.map(c => Object.assign({}, c));
+  if (Array.isArray(r.mix_componenten)) copy.mix_componenten = r.mix_componenten.map(c => Object.assign({}, c));
+  return copy;
+}
 function bulkDuplicate() {
   if (!selectedIds.size) return;
-  const copies = regels.filter(r => selectedIds.has(r.id)).map(r => Object.assign({}, r, {id: newId(), status: 'V'}));
+  const copies = regels.filter(r => selectedIds.has(r.id)).map(r => cloneRegel(r, {id: newId(), status: 'V'}));
   regels = regels.concat(copies);
   selectedIds.clear();
   copies.forEach(c => selectedIds.add(c.id));
@@ -1734,18 +1751,19 @@ function deleteRow(id) {
 function duplicateRow(id) {
   const r = regels.find(x => x.id === id);
   if (!r) return;
-  const copy = Object.assign({}, r, {id: newId(), status: 'V'});
-  regels.push(copy);
+  regels.push(cloneRegel(r, {id: newId(), status: 'V'}));
   renderTable();
   toast('Regel gedupliceerd (status: aanvraag)');
 }
 
 /* === DRAWER (form) === */
+// KAR-niveau velden. Artikel-velden (productgroep/teelt/potmaat/bloeistadium/
+// teeltspecificatie/prijs) staan nu per component in r.componenten[].
 const DRAWER_FIELDS = [
   'status','vrc','vrc_info','ior','ior_info','leverancier','verkoper','gepland',
   'klant','eindklant','afzetland',
-  'productgroep','bloeistadium','potmaat','planningsgroep','teelt','teeltspecificatie',
-  'jaar','week','verlaaddag','losdag','actiedag','prijs','af_tuin','transport','fust_incl_excl',
+  'planningsgroep',
+  'jaar','week','verlaaddag','losdag','actiedag','af_tuin','transport','fust_incl_excl',
   'type_kar','aantal_lagen_kar','aantal_fust_laag','aantal_per_fust','aantal_pl_kar','aantal_fust','aantal_kar_bruto',
   'geplande_aantallen',
   // Verpakking algemeen
@@ -1797,13 +1815,12 @@ function openDrawer(id) {
   }
   refreshKarHints();
 
-  // Mix-kar
-  currentMix = (r && Array.isArray(r.mix_componenten)) ? r.mix_componenten.map(c => Object.assign({}, c)) : [];
-  setMixMode(currentMix.length ? 'mix' : 'single');
-  renderMixComponents();
-  refreshMixCap();
+  // Kar-componenten (artikelen op de kar) — migreer oud formaat indien nodig
+  currentComponenten = regelNaarComponenten(r);
+  if (!currentComponenten.length) currentComponenten = [blankComponent()];
+  renderComponentPanels();
 
-  // Bedrukkings-opties: laad checkbox + alle sub-velden
+  // Bedrukkings-opties op KAR-niveau: laad checkbox + alle sub-velden
   loadBedrukIntoForm(r || {});
 
   $('drawer-bg').classList.add('show');
@@ -1888,12 +1905,17 @@ const BEDRUKKING_OPTIES = [
   ]},
 ];
 
+// Bedrukking-splitsing: karposter + karsticker horen bij de KAR, de rest per ARTIKEL/component
+const KAR_BEDRUK_KEYS = new Set(['karposter','karsticker']);
+const KAR_BEDRUKKING = BEDRUKKING_OPTIES.filter(o => KAR_BEDRUK_KEYS.has(o.key));
+const ARTIKEL_BEDRUKKING = BEDRUKKING_OPTIES.filter(o => !KAR_BEDRUK_KEYS.has(o.key));
+
 // Build flat list of every regel-field that the cards introduce.
 function bedrukSubFieldId(optKey, subKey) { return optKey + '_' + subKey; }
 function bedrukSubFieldDomId(optKey, subKey) { return 'd-' + bedrukSubFieldId(optKey, subKey); }
 function allBedrukFieldIds() {
   const ids = [];
-  BEDRUKKING_OPTIES.forEach(o => {
+  KAR_BEDRUKKING.forEach(o => {
     o.subFields.forEach(f => ids.push(bedrukSubFieldId(o.key, f.f)));
   });
   return ids;
@@ -1910,7 +1932,7 @@ function renderBedrukCards() {
   const wrap = $('bedruk-list');
   if (!wrap) return;
   const opt = (o) => '<option value="'+esc(o)+'">'+esc(o)+'</option>';
-  wrap.innerHTML = BEDRUKKING_OPTIES.map(o => {
+  wrap.innerHTML = KAR_BEDRUKKING.map(o => {
     const subFields = o.subFields.map(sf => {
       const id = bedrukSubFieldDomId(o.key, sf.f);
       let input;
@@ -1962,7 +1984,7 @@ function toggleBedrukCard(key, ev) {
 }
 
 function loadBedrukIntoForm(r) {
-  BEDRUKKING_OPTIES.forEach(o => {
+  KAR_BEDRUKKING.forEach(o => {
     const cb = $('d-'+o.key);
     if (cb) cb.checked = !!(r && r[o.key]);
     o.subFields.forEach(sf => {
@@ -1978,7 +2000,7 @@ function loadBedrukIntoForm(r) {
 }
 
 function readBedrukFromForm(r) {
-  BEDRUKKING_OPTIES.forEach(o => {
+  KAR_BEDRUKKING.forEach(o => {
     r[o.key] = !!$('d-'+o.key).checked;
     o.subFields.forEach(sf => {
       const id = bedrukSubFieldDomId(o.key, sf.f);
@@ -2022,53 +2044,19 @@ function recalcKarMath() {
   refreshMixCap();
 }
 
-/* === MIX-KAR === */
-let currentMix = []; // [{artikelnr, naam, potmaat, kleur, aantal_per_kar}]
-let currentMixMode = 'single';
+/* === KAR-COMPONENTEN === */
+// Elke orderregel is een kar met >=1 artikel-componenten. Elk component draagt
+// artikel-detailvelden + eigen artikel-bedrukking. currentComponenten is de
+// bron van waarheid tijdens het bewerken; inputs schrijven er direct in.
+let currentComponenten = [];
 
-function setMixMode(mode) {
-  currentMixMode = mode;
-  document.querySelectorAll('input[name="mix-mode"]').forEach(r => { r.checked = (r.value === mode); });
-  $('mix-box').classList.toggle('show', mode === 'mix');
-  refreshMixCap();
+const COMP_ARTIKEL_VELDEN = ['productgroep','teelt','potmaat','bloeistadium','teeltspecificatie','kleur','prijs'];
+
+function blankComponent() {
+  return {artikelnr:'', naam:'', productgroep:'', teelt:'', potmaat:'', bloeistadium:'',
+          teeltspecificatie:'', kleur:'', aantal_per_kar:0, prijs:0, _expanded:true};
 }
 
-function refreshMixCap() {
-  const cap = calcPerKar();
-  const filled = currentMix.reduce((s,c) => s + N(c.aantal_per_kar), 0);
-  $('mix-filled').textContent = filled;
-  $('mix-cap-total').textContent = cap || '?';
-  const pct = cap > 0 ? Math.round(filled / cap * 100) : 0;
-  $('mix-pct').textContent = pct;
-  $('mix-bar-fill').style.width = Math.min(100, pct) + '%';
-  $('mix-cap').classList.toggle('over', cap > 0 && filled > cap);
-  const rest = cap - filled;
-  $('mix-cap-rest').textContent = cap > 0
-    ? (rest > 0 ? ('nog ' + rest + ' planten vrij') : (rest === 0 ? 'kar precies vol' : Math.abs(rest) + ' over capaciteit'))
-    : 'stel eerst de kar-capaciteit in (lagen × fust/laag × per fust)';
-}
-
-function renderMixComponents() {
-  const list = $('comp-list');
-  if (!currentMix.length) {
-    list.innerHTML = '<div class="empty-mix">Nog geen componenten — voeg een artikel toe of een vrije regel</div>';
-    return;
-  }
-  list.innerHTML = currentMix.map((c, i) => {
-    const swatchColor = colorFor(c.kleur || c.naam);
-    const imgUrl = imageUrlFor(c);
-    const imgClick = imgUrl ? ' onclick="openImagePreview(\''+(imgUrl||'').replace(/\'/g,'\\\\\\\'')+'\', \''+esc(c.naam||'').replace(/\'/g,'')+'\')"' : '';
-    return '<div class="comp-item">'
-      + '<span class="swatch" style="background:'+swatchColor+'" title="Kleur"></span>'
-      + '<span'+imgClick+' style="cursor:'+(imgUrl?'pointer':'default')+'">'+imgTag(c, 'thumb-sm')+' <span class="nm">'+esc(c.naam || c.teelt || '(geen naam)')+'</span> '
-      + '<span class="nr">'+esc(c.artikelnr || '')+'</span></span>'
-      + '<input type="text" placeholder="Potmaat" value="'+esc(c.potmaat||'')+'" oninput="updateMixField('+i+',\'potmaat\',this.value)">'
-      + '<input type="text" placeholder="Kleur" value="'+esc(c.kleur||'')+'" oninput="updateMixField('+i+',\'kleur\',this.value)">'
-      + '<input type="number" min="0" step="1" class="aant" value="'+(c.aantal_per_kar||0)+'" oninput="updateMixField('+i+',\'aantal_per_kar\',this.value); refreshMixCap()">'
-      + '<button type="button" class="x" onclick="removeMixComponent('+i+')" title="Verwijderen">×</button>'
-    + '</div>';
-  }).join('');
-}
 function colorFor(s) {
   s = (s || '').toLowerCase();
   if (s.includes('rood')||s.includes('red')) return '#e57373';
@@ -2081,23 +2069,209 @@ function colorFor(s) {
   if (s.includes('groen')||s.includes('green')) return '#81c784';
   return '#90a4ae';
 }
-function updateMixField(i, f, v) {
-  if (!currentMix[i]) return;
-  currentMix[i][f] = (f === 'aantal_per_kar') ? N(v) : v;
-}
-function removeMixComponent(i) {
-  currentMix.splice(i, 1);
-  renderMixComponents();
-  refreshMixCap();
-}
-function addFreeComponent() {
-  if (currentMixMode !== 'mix') setMixMode('mix');
+
+function refreshKarCap() {
   const cap = calcPerKar();
-  const filled = currentMix.reduce((s,c) => s + N(c.aantal_per_kar), 0);
+  const filled = currentComponenten.reduce((s,c) => s + N(c.aantal_per_kar), 0);
+  if ($('mix-filled')) $('mix-filled').textContent = filled;
+  if ($('mix-cap-total')) $('mix-cap-total').textContent = cap || '?';
+  const pct = cap > 0 ? Math.round(filled / cap * 100) : 0;
+  if ($('mix-pct')) $('mix-pct').textContent = pct;
+  if ($('mix-bar-fill')) $('mix-bar-fill').style.width = Math.min(100, pct) + '%';
+  if ($('mix-cap')) $('mix-cap').classList.toggle('over', cap > 0 && filled > cap);
+  const rest = cap - filled;
+  if ($('mix-cap-rest')) $('mix-cap-rest').textContent = cap > 0
+    ? (rest > 0 ? ('nog ' + rest + ' planten vrij') : (rest === 0 ? 'kar precies vol' : Math.abs(rest) + ' over capaciteit'))
+    : 'stel eerst de kar-capaciteit in (lagen × fust/laag × per fust)';
+}
+// alias zodat bestaande aanroepen blijven werken
+function refreshMixCap() { refreshKarCap(); }
+
+function compArtikelVeldHtml(c, i, f, label, datalist) {
+  const isNum = f === 'prijs';
+  const val = c[f] != null ? c[f] : '';
+  const dl = datalist ? ' list="'+datalist+'"' : '';
+  const type = isNum ? ' type="number" step="0.01" min="0"' : ' type="text"';
+  return '<div class="form-group"><label>'+esc(label)+'</label>'
+    + '<input'+type+dl+' value="'+esc(val===0?'':val)+'" '
+    + 'oninput="updateCompField('+i+',\''+f+'\',this.value)"></div>';
+}
+
+function compBedrukCardHtml(c, i, o) {
+  const opt = (v) => '<option value="'+esc(v)+'">'+esc(v)+'</option>';
+  const checked = !!c[o.key];
+  const sub = o.subFields.map(sf => {
+    const fid = o.key + '_' + sf.f;
+    const val = c[fid] != null ? c[fid] : '';
+    let input;
+    if (sf.type === 'wie') {
+      input = '<select onchange="updateCompField('+i+',\''+fid+'\',this.value)">'
+        + WIE.map(w => '<option value="'+esc(w)+'"'+(val===w?' selected':'')+'>'+esc(w)+'</option>').join('') + '</select>';
+    } else if (sf.type === 'select') {
+      input = '<select onchange="updateCompField('+i+',\''+fid+'\',this.value)">'
+        + (sf.opts||[]).map(w => '<option value="'+esc(w)+'"'+(val===w?' selected':'')+'>'+esc(w)+'</option>').join('') + '</select>';
+    } else if (sf.type === 'datalist') {
+      input = '<input type="text" list="'+sf.datalist+'" autocomplete="off" value="'+esc(val)+'" '
+        + 'oninput="updateCompField('+i+',\''+fid+'\',this.value)">';
+    } else if (sf.type === 'num') {
+      input = '<input type="number" step="'+(sf.f.indexOf('prijs')>=0?'0.01':'1')+'" min="0" value="'+esc(val===0?'':val)+'" '
+        + 'oninput="updateCompField('+i+',\''+fid+'\',this.value)">';
+    } else {
+      input = '<input type="text" value="'+esc(val)+'" oninput="updateCompField('+i+',\''+fid+'\',this.value)">';
+    }
+    return '<div class="form-group"><label>'+esc(sf.label)+'</label>'+input+'</div>';
+  }).join('');
+  return '<div class="bedruk-card'+(checked?' actief':'')+'">'
+    + '<div class="bedruk-head" onclick="toggleCompBedruk('+i+',\''+o.key+'\',event)">'
+      + '<input type="checkbox"'+(checked?' checked':'')+' onclick="event.stopPropagation()" '
+      + 'onchange="updateCompField('+i+',\''+o.key+'\',this.checked)">'
+      + '<span class="icon">'+o.icon+'</span> <span>'+esc(o.label)+'</span>'
+    + '</div>'
+    + '<div class="bedruk-body"><div class="bedruk-grid">'+sub+'</div></div>'
+  + '</div>';
+}
+
+function renderComponentPanels() {
+  const list = $('comp-list');
+  if (!list) return;
+  if (!currentComponenten.length) {
+    list.innerHTML = '<div class="empty-mix">Nog geen artikelen — voeg een artikel toe uit de masterdata of een vrije regel</div>';
+    refreshKarCap();
+    return;
+  }
+  list.innerHTML = currentComponenten.map((c, i) => {
+    const swatchColor = colorFor(c.kleur || c.naam);
+    const imgUrl = imageUrlFor(c);
+    const imgClick = imgUrl ? ' onclick="event.stopPropagation();openImagePreview(\''+(imgUrl||'').replace(/\'/g,'\\\\\\\'')+'\', \''+esc(c.naam||'').replace(/\'/g,'')+'\')"' : '';
+    const open = c._expanded !== false;
+    const bedrukCount = ARTIKEL_BEDRUKKING.filter(o => c[o.key]).length;
+    const head = '<div class="comp-head" onclick="toggleCompExpand('+i+')">'
+      + '<span class="comp-chevron">'+(open?'▾':'▸')+'</span>'
+      + '<span class="swatch" style="background:'+swatchColor+'" title="Kleur"></span>'
+      + '<span'+imgClick+' style="cursor:'+(imgUrl?'pointer':'default')+'">'+imgTag(c, 'thumb-sm')+'</span>'
+      + '<span class="comp-naam">'+esc(c.naam || c.teelt || '(geen naam)')+'</span>'
+      + '<span class="comp-nr">'+esc(c.artikelnr || '')+'</span>'
+      + (bedrukCount ? '<span class="comp-bedruk-badge" title="'+bedrukCount+' bedrukkings-optie(s)">'+bedrukCount+'×</span>' : '')
+      + '<input type="number" min="0" step="1" class="comp-q" title="Aantal op deze kar" value="'+(c.aantal_per_kar||0)+'" '
+        + 'onclick="event.stopPropagation()" oninput="updateCompField('+i+',\'aantal_per_kar\',this.value);refreshKarCap()">'
+      + '<span class="comp-q-lbl">/kar</span>'
+      + '<button type="button" class="x" onclick="event.stopPropagation();removeComponent('+i+')" title="Verwijderen">×</button>'
+      + '</div>';
+    const fields = '<div class="form-grid comp-fields">'
+      + compArtikelVeldHtml(c, i, 'productgroep', 'Productgroep', 'dl-productgroep')
+      + compArtikelVeldHtml(c, i, 'teelt', 'Teelt', 'dl-teelt')
+      + compArtikelVeldHtml(c, i, 'potmaat', 'Potmaat', 'dl-potmaat')
+      + compArtikelVeldHtml(c, i, 'kleur', 'Kleur', null)
+      + compArtikelVeldHtml(c, i, 'bloeistadium', 'Bloeistadium', 'dl-bloeistadium')
+      + compArtikelVeldHtml(c, i, 'teeltspecificatie', 'Teeltspecificatie', 'dl-teeltspecificatie')
+      + compArtikelVeldHtml(c, i, 'prijs', 'Prijs (€)', null)
+      + '</div>';
+    const bedruk = '<div class="comp-bedruk">'
+      + ARTIKEL_BEDRUKKING.map(o => compBedrukCardHtml(c, i, o)).join('')
+      + '</div>';
+    return '<div class="comp-panel'+(open?' open':'')+'">'
+      + head
+      + '<div class="comp-body">' + fields + bedruk + '</div>'
+    + '</div>';
+  }).join('');
+  refreshKarCap();
+}
+
+function updateCompField(i, f, v) {
+  const c = currentComponenten[i];
+  if (!c) return;
+  if (typeof v === 'boolean') { c[f] = v; renderComponentPanels(); return; }
+  if (f === 'aantal_per_kar' || f === 'prijs' || isBedrukNumField(f)) {
+    c[f] = N(v);
+  } else {
+    c[f] = v;
+  }
+}
+
+function toggleCompExpand(i) {
+  const c = currentComponenten[i];
+  if (!c) return;
+  c._expanded = c._expanded === false;
+  renderComponentPanels();
+}
+
+function toggleCompBedruk(i, key, ev) {
+  if (ev && ev.target && ev.target.tagName === 'INPUT') return;
+  const c = currentComponenten[i];
+  if (!c) return;
+  c[key] = !c[key];
+  renderComponentPanels();
+}
+
+function removeComponent(i) {
+  currentComponenten.splice(i, 1);
+  renderComponentPanels();
+}
+
+function addFreeComponent() {
+  const cap = calcPerKar();
+  const filled = currentComponenten.reduce((s,c) => s + N(c.aantal_per_kar), 0);
   const rest = Math.max(0, cap - filled);
-  currentMix.push({artikelnr:'', naam:'', potmaat:'', kleur:'', aantal_per_kar: rest || 0});
-  renderMixComponents();
-  refreshMixCap();
+  const c = blankComponent();
+  c.aantal_per_kar = rest || 0;
+  currentComponenten.push(c);
+  renderComponentPanels();
+}
+
+// Bouw de componenten-lijst voor de drawer uit een regel — migreert oud formaat.
+function regelNaarComponenten(r) {
+  if (!r) return [];
+  // Nieuw formaat: regel heeft al componenten[]
+  if (Array.isArray(r.componenten) && r.componenten.length) {
+    return r.componenten.map(c => Object.assign(blankComponent(), c, {_expanded: true}));
+  }
+  // Oud mix-formaat: lichte mix_componenten[] — vul aan tot volledig component
+  if (Array.isArray(r.mix_componenten) && r.mix_componenten.length) {
+    return r.mix_componenten.map(mc => Object.assign(blankComponent(), {
+      artikelnr: mc.artikelnr||'', naam: mc.naam||'', teelt: mc.teelt||'',
+      potmaat: mc.potmaat||'', kleur: mc.kleur||'',
+      aantal_per_kar: N(mc.aantal_per_kar), _expanded: true
+    }));
+  }
+  // Oud enkelvoudig formaat: maak één component uit de artikel-velden van de regel
+  const hasArtikel = r.teelt || r.productgroep || r.potmaat || r.naam || r.artikelnr;
+  if (hasArtikel || r.id) {
+    const c = blankComponent();
+    c.artikelnr = r.artikelnr || '';
+    c.naam = r.naam || '';
+    COMP_ARTIKEL_VELDEN.forEach(f => { if (r[f] != null && r[f] !== '') c[f] = r[f]; });
+    c.aantal_per_kar = N(r.aantal_pl_kar) || 0;
+    // Artikel-bedrukking van regel-niveau meenemen naar het component
+    ARTIKEL_BEDRUKKING.forEach(o => {
+      if (r[o.key]) c[o.key] = true;
+      o.subFields.forEach(sf => {
+        const fid = o.key + '_' + sf.f;
+        if (r[fid] != null && r[fid] !== '') c[fid] = r[fid];
+      });
+    });
+    c._expanded = true;
+    return [c];
+  }
+  return [];
+}
+
+// Lees de huidige componenten terug naar een opslag-formaat (schone objecten).
+function componentenVoorOpslag() {
+  return currentComponenten.map(c => {
+    const out = {};
+    ['artikelnr','naam'].concat(COMP_ARTIKEL_VELDEN).forEach(f => { out[f] = c[f] != null ? c[f] : ''; });
+    if (c.image_url) out.image_url = c.image_url;
+    out.aantal_per_kar = N(c.aantal_per_kar);
+    out.prijs = N(c.prijs);
+    ARTIKEL_BEDRUKKING.forEach(o => {
+      out[o.key] = !!c[o.key];
+      o.subFields.forEach(sf => {
+        const fid = o.key + '_' + sf.f;
+        out[fid] = c[fid] != null ? c[fid] : '';
+      });
+    });
+    return out;
+  });
 }
 
 /* === JAAR OVERZETTEN === */
@@ -2196,9 +2370,11 @@ function doRollover() {
   const addNote = $('ro-note').checked;
 
   const copies = matches.map(r => {
-    const c = Object.assign({}, r, {id: newId(), jaar: to, status: 'V'});
+    const c = cloneRegel(r, {id: newId(), jaar: to, status: 'V'});
     if (reset) {
       ROLLOVER_RESET_FIELDS.forEach(f => { c[f] = 0; });
+      // ook component-prijzen resetten
+      if (Array.isArray(c.componenten)) c.componenten.forEach(comp => { comp.prijs = 0; });
     }
     if (addNote) {
       c.opmerking = ('(overgezet uit ' + from + ') ' + (r.opmerking || '')).trim();
@@ -2223,7 +2399,6 @@ function doRollover() {
 
 /* === MASTER PICKER === */
 function openMasterPicker() {
-  if (currentMixMode !== 'mix') setMixMode('mix');
   $('picker-search').value = '';
   $('picker-pot').value = '';
   $('picker-comb').value = '';
@@ -2258,19 +2433,19 @@ function renderPickerList() {
 function pickArtikel(jsonStr) {
   const a = JSON.parse(jsonStr);
   const cap = calcPerKar();
-  const filled = currentMix.reduce((s,c) => s + N(c.aantal_per_kar), 0);
+  const filled = currentComponenten.reduce((s,c) => s + N(c.aantal_per_kar), 0);
   const rest = Math.max(0, cap - filled);
-  currentMix.push({
-    artikelnr: a.artikelnr || '',
-    naam: a.naam || '',
-    potmaat: a.potmaat || '',
-    kleur: a.typekleur || '',
-    image_url: a.image_url || '',
-    aantal_per_kar: rest || 0,
-    teelt: '', // optional override
-  });
-  renderMixComponents();
-  refreshMixCap();
+  const c = blankComponent();
+  c.artikelnr = a.artikelnr || '';
+  c.naam = a.naam || '';
+  c.potmaat = a.potmaat || '';
+  c.kleur = a.typekleur || '';
+  c.teelt = a.soort || '';
+  c.teeltspecificatie = a.thema || '';
+  if (a.image_url) c.image_url = a.image_url;
+  c.aantal_per_kar = rest || 0;
+  currentComponenten.push(c);
+  renderComponentPanels();
   closeMasterPicker();
   toast('Toegevoegd aan kar: ' + (a.naam || a.artikelnr));
 }
@@ -2284,25 +2459,27 @@ function readForm() {
     r[f] = NUM_FIELDS.has(f) ? N(v) : v;
   });
   DRAWER_BOOLS.forEach(f => { r[f] = $('d-'+f).checked; });
-  // Bedrukkings-opties uitlezen (zet booleans + alle sub-velden)
+  // Bedrukkings-opties op KAR-niveau uitlezen (karposter + karsticker)
   readBedrukFromForm(r);
-  // store karposter/sticker as Ja/Nee strings too for export compatibility
   r.karposter_ja_nee = r.karposter ? 'Ja' : 'Nee';
+  // Kar-componenten (artikelen op de kar)
+  r.componenten = componentenVoorOpslag();
+  // aantal_pl_kar = som van componenten als die gevuld zijn
+  const compTotal = r.componenten.reduce((s,c) => s + N(c.aantal_per_kar), 0);
+  if (compTotal > 0) r.aantal_pl_kar = compTotal;
+  // Gedenormaliseerde cache: kopieer eerste component naar regel-niveau zodat
+  // tabel/dashboard/export blijven werken tot fase 2/3 die herzien.
+  const c0 = r.componenten[0] || {};
+  r.artikelnr = c0.artikelnr || '';
+  r.naam = c0.naam || '';
+  r.productgroep = c0.productgroep || '';
+  r.teelt = c0.teelt || '';
+  r.potmaat = c0.potmaat || '';
+  r.bloeistadium = c0.bloeistadium || '';
+  r.teeltspecificatie = c0.teeltspecificatie || '';
+  r.prijs = N(c0.prijs);
+  r.sticker = !!c0.sticker;
   r.sticker_ja_nee = r.sticker ? 'Ja' : 'Nee';
-  // Mix-kar
-  if (currentMixMode === 'mix' && currentMix.length) {
-    r.mix_componenten = currentMix.map(c => ({
-      artikelnr: c.artikelnr || '', naam: c.naam || '',
-      potmaat: c.potmaat || '', kleur: c.kleur || '',
-      teelt: c.teelt || '',
-      aantal_per_kar: N(c.aantal_per_kar)
-    }));
-    // Override aantal_pl_kar with sum of mix components if mix is active
-    const mixTotal = r.mix_componenten.reduce((s,c) => s + N(c.aantal_per_kar), 0);
-    if (mixTotal > 0) r.aantal_pl_kar = mixTotal;
-  } else {
-    delete r.mix_componenten;
-  }
   return r;
 }
 
@@ -2476,14 +2653,19 @@ function rapidStartXml(rs) {
     fields(r).forEach(([k,v]) => {
       lines.push('    <'+k+'>'+xmlEsc(v)+'</'+k+'>');
     });
-    if (r.mix_componenten && r.mix_componenten.length) {
+    const xmlComps = regelComponenten(r);
+    if (xmlComps.length) {
       lines.push('    <MixComponenten>');
-      r.mix_componenten.forEach(c => {
+      xmlComps.forEach(c => {
         lines.push('      <Component>');
         lines.push('        <Artikelnr>'+xmlEsc(c.artikelnr||'')+'</Artikelnr>');
         lines.push('        <Naam>'+xmlEsc(c.naam||c.teelt||'')+'</Naam>');
+        lines.push('        <Productgroep>'+xmlEsc(c.productgroep||'')+'</Productgroep>');
         lines.push('        <Potmaat>'+xmlEsc(c.potmaat||'')+'</Potmaat>');
         lines.push('        <Kleur>'+xmlEsc(c.kleur||'')+'</Kleur>');
+        lines.push('        <Bloeistadium>'+xmlEsc(c.bloeistadium||'')+'</Bloeistadium>');
+        lines.push('        <Teeltspecificatie>'+xmlEsc(c.teeltspecificatie||'')+'</Teeltspecificatie>');
+        lines.push('        <Prijs>'+xmlEsc(c.prijs||0)+'</Prijs>');
         lines.push('        <AantalPerKar>'+xmlEsc(c.aantal_per_kar||0)+'</AantalPerKar>');
         lines.push('      </Component>');
       });

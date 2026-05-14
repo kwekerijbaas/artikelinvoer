@@ -63,6 +63,15 @@ header .sub{opacity:.8;font-size:.8rem}
 .form-group.full{grid-column:1/-1}
 .form-group.span2{grid-column:span 2}
 .form-group.span3{grid-column:span 3}
+/* 6-koloms variant — voor secties met 1/6-breedtes (helft van 1/3) */
+.form-grid-6{grid-template-columns:repeat(6,1fr)}
+.form-grid-6 .form-group{grid-column-end:span 2}
+.form-grid-6 .form-group.w1{grid-column-end:span 1}
+.form-grid-6 .form-group.w2{grid-column-end:span 2}
+.form-grid-6 .form-group.w3{grid-column-end:span 3}
+.form-grid-6 .form-group.w4{grid-column-end:span 4}
+.form-grid-6 .form-group.w6{grid-column-end:span 6}
+.form-grid-6 .form-group.newrow{grid-column-start:1}
 .form-group label{font-size:.7rem;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.4px}
 .form-group select,.form-group input,.form-group textarea{
   padding:6px 8px;border:1px solid var(--border);border-radius:4px;
@@ -577,34 +586,38 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
   </div>
   <div class="drawer-body">
     <div class="subhead">Status, VRC &amp; Verkoper</div>
-    <div class="form-grid">
-      <div class="form-group">
+    <div class="form-grid form-grid-6">
+      <div class="form-group w1">
         <label>Status *</label>
         <select id="d-status"></select>
       </div>
-      <div class="form-group">
-        <label>IOR (Inkooporder)</label>
-        <input id="d-ior" type="text" list="dl-ior" placeholder="Kies of typ IOR-…" oninput="toggleLeverancierVeld()">
-      </div>
-      <div class="form-group">
+      <div class="form-group w2">
         <label>Verkoper</label>
         <select id="d-verkoper"><option value=""></option></select>
       </div>
-      <div class="form-group">
-        <label>Gepland?</label>
-        <select id="d-gepland"><option value="">—</option><option>Ja</option><option>Nee</option></select>
-      </div>
-      <div class="form-group span2">
+      <div class="form-group w2 newrow">
         <label>VRC (Verkoopraamcontract)</label>
         <input id="d-vrc" type="text" list="dl-vrc" placeholder="Kies of typ VRC-…">
       </div>
-      <div class="form-group span2">
+      <div class="form-group w2">
         <label>VRC info / raamcontract toelichting</label>
         <input id="d-vrc_info" type="text">
       </div>
-      <div class="form-group span2" id="d-leverancier-wrap" style="display:none">
+      <div class="form-group w1">
+        <label>IOR (Inkooporder)</label>
+        <input id="d-ior" type="text" list="dl-ior" placeholder="Kies of typ IOR-…" oninput="toggleIorVelden()">
+      </div>
+      <div class="form-group w2" id="d-leverancier-wrap" style="display:none">
         <label>Leverancier (kweker)</label>
         <input id="d-leverancier" type="text" list="dl-leverancier" placeholder="Kweker waar je inkoopt…">
+      </div>
+      <div class="form-group w2" id="d-ior_info-wrap" style="display:none">
+        <label>IOR info / toelichting</label>
+        <input id="d-ior_info" type="text">
+      </div>
+      <div class="form-group w2">
+        <label>Gepland?</label>
+        <select id="d-gepland"><option value="">—</option><option>Ja</option><option>Nee</option></select>
       </div>
     </div>
 
@@ -1118,11 +1131,13 @@ function refreshIorDatalists() {
   }
 }
 
-function toggleLeverancierVeld() {
-  const ior = ($('d-ior') || {}).value || '';
-  const wrap = $('d-leverancier-wrap');
-  if (!wrap) return;
-  wrap.style.display = ior.trim() ? '' : 'none';
+function toggleIorVelden() {
+  // Leverancier + IOR info verschijnen alleen als er een IOR ingevuld is
+  const ior = (($('d-ior') || {}).value || '').trim();
+  ['d-leverancier-wrap','d-ior_info-wrap'].forEach(id => {
+    const wrap = $(id);
+    if (wrap) wrap.style.display = ior ? '' : 'none';
+  });
 }
 
 /* === RENDER === */
@@ -1727,7 +1742,7 @@ function duplicateRow(id) {
 
 /* === DRAWER (form) === */
 const DRAWER_FIELDS = [
-  'status','vrc','vrc_info','ior','leverancier','verkoper','gepland',
+  'status','vrc','vrc_info','ior','ior_info','leverancier','verkoper','gepland',
   'klant','eindklant','afzetland',
   'productgroep','bloeistadium','potmaat','planningsgroep','teelt','teeltspecificatie',
   'jaar','week','verlaaddag','losdag','actiedag','prijs','af_tuin','transport','fust_incl_excl',
@@ -1764,8 +1779,8 @@ function openDrawer(id) {
     $('d-jaar').value = years.length ? years[years.length-1] : new Date().getFullYear();
   }
 
-  // Leverancier-veld zichtbaarheid synchroniseren met IOR-waarde
-  toggleLeverancierVeld();
+  // Leverancier + IOR info zichtbaarheid synchroniseren met IOR-waarde
+  toggleIorVelden();
 
   // Reset auto-calc state: if loading existing regel with manually set values, treat as auto unless mismatch
   manualOverride.aantal_pl_kar = false;
@@ -2409,6 +2424,7 @@ function rapidStartXml(rs) {
       ['Status', r.status],
       ['StatusOmschrijving', statusLabel(r.status)],
       ['IOR', r.ior],
+      ['IORInfo', r.ior_info],
       ['Leverancier', r.leverancier],
       ['Verkoper', r.verkoper],
       ['Klant', r.klant],
@@ -2502,10 +2518,10 @@ function exportCSV() {
     bedrukHeaders.push(o.label);
     o.subFields.forEach(sf => bedrukHeaders.push(o.label + ' — ' + sf.label));
   });
-  const h = ['Jaar','Status','VRC','VRC info','IOR','Leverancier','Verkoper','Klant','Eindklant','Afzetland','Productgroep','Teelt','Bloeistadium','Teeltspecificatie','Potmaat','Planningsgroep','Week','Verlaaddag','Losdag','Actiedag','Totaal','Geplande','Prijs','AfTuin','Transport','Fust','TypeKar','AantalLagenKar','AantalFustLaag','AantalPerFust','AantalPlKar','AantalFust','AantalKarBruto','TypeVerpakking','VerpakkingKleur','EAN','Plantenpaspoort','PrijsConsument','SealenStrappen','MixType','DetailsKlantmix','MinContractPct','Ladingdrager', ...bedrukHeaders, 'Opmerking','MixSamenstelling'];
+  const h = ['Jaar','Status','VRC','VRC info','IOR','IOR info','Leverancier','Verkoper','Klant','Eindklant','Afzetland','Productgroep','Teelt','Bloeistadium','Teeltspecificatie','Potmaat','Planningsgroep','Week','Verlaaddag','Losdag','Actiedag','Totaal','Geplande','Prijs','AfTuin','Transport','Fust','TypeKar','AantalLagenKar','AantalFustLaag','AantalPerFust','AantalPlKar','AantalFust','AantalKarBruto','TypeVerpakking','VerpakkingKleur','EAN','Plantenpaspoort','PrijsConsument','SealenStrappen','MixType','DetailsKlantmix','MinContractPct','Ladingdrager', ...bedrukHeaders, 'Opmerking','MixSamenstelling'];
   const rows = regels.map(r => {
     const base = [
-      r.jaar, r.status, r.vrc, r.vrc_info, r.ior, r.leverancier, r.verkoper, r.klant, r.eindklant, r.afzetland,
+      r.jaar, r.status, r.vrc, r.vrc_info, r.ior, r.ior_info, r.leverancier, r.verkoper, r.klant, r.eindklant, r.afzetland,
       r.productgroep, r.teelt, r.bloeistadium, r.teeltspecificatie, r.potmaat, r.planningsgroep,
       r.week, r.verlaaddag, r.losdag, r.actiedag,
       r.afgenomen_totaal, r.geplande_aantallen, r.prijs, r.af_tuin, r.transport, r.fust_incl_excl,
@@ -2535,10 +2551,10 @@ function exportExcel() {
     bedrukHeaders.push(o.label);
     o.subFields.forEach(sf => bedrukHeaders.push(o.label + ' — ' + sf.label));
   });
-  const h = ['Jaar','Status','VRC','VRC info','IOR','Leverancier','Verkoper','Klant','Eindklant','Afzetland','Productgroep','Teelt','Bloeistadium','Teeltspecificatie','Potmaat','Planningsgroep','Week','Verlaaddag','Losdag','Actiedag','Totaal','Geplande','Prijs','AfTuin','Transport','Fust','TypeKar','AantalLagenKar','AantalFustLaag','AantalPerFust','AantalPlKar','AantalFust','AantalKarBruto','TypeVerpakking','VerpakkingKleur','EAN','Plantenpaspoort','PrijsConsument','SealenStrappen','MixType','DetailsKlantmix','MinContractPct','Ladingdrager', ...bedrukHeaders, 'Opmerking','MixSamenstelling'];
+  const h = ['Jaar','Status','VRC','VRC info','IOR','IOR info','Leverancier','Verkoper','Klant','Eindklant','Afzetland','Productgroep','Teelt','Bloeistadium','Teeltspecificatie','Potmaat','Planningsgroep','Week','Verlaaddag','Losdag','Actiedag','Totaal','Geplande','Prijs','AfTuin','Transport','Fust','TypeKar','AantalLagenKar','AantalFustLaag','AantalPerFust','AantalPlKar','AantalFust','AantalKarBruto','TypeVerpakking','VerpakkingKleur','EAN','Plantenpaspoort','PrijsConsument','SealenStrappen','MixType','DetailsKlantmix','MinContractPct','Ladingdrager', ...bedrukHeaders, 'Opmerking','MixSamenstelling'];
   const rows = regels.map(r => {
     const base = [
-      r.jaar, r.status, r.vrc, r.vrc_info, r.ior, r.leverancier, r.verkoper, r.klant, r.eindklant, r.afzetland,
+      r.jaar, r.status, r.vrc, r.vrc_info, r.ior, r.ior_info, r.leverancier, r.verkoper, r.klant, r.eindklant, r.afzetland,
       r.productgroep, r.teelt, r.bloeistadium, r.teeltspecificatie, r.potmaat, r.planningsgroep,
       r.week, r.verlaaddag, r.losdag, r.actiedag,
       r.afgenomen_totaal, r.geplande_aantallen, r.prijs, r.af_tuin, r.transport, r.fust_incl_excl,

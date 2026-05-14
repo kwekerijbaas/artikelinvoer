@@ -304,6 +304,16 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
   font-size:.78rem;text-align:right;font-variant-numeric:tabular-nums;font-weight:600
 }
 .comp-head .comp-q-lbl{font-size:.7rem;color:#888}
+.comp-head .comp-q-hint{
+  font-size:.7rem;color:var(--groen-dark);background:var(--groen-licht);
+  padding:1px 5px;border-radius:8px;cursor:pointer;font-weight:600
+}
+.comp-head .comp-q-hint:hover{background:var(--groen);color:#fff}
+.comp-sub-label{
+  font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--groen-dark);margin:8px 0 3px
+}
+.comp-sub-label:first-child{margin-top:0}
 .comp-head .x{background:none;border:none;color:var(--rood);font-size:1.05rem;cursor:pointer;padding:0 2px;line-height:1}
 .comp-body{display:none;padding:8px;border-top:1px solid var(--border)}
 .comp-panel.open .comp-body{display:block}
@@ -669,12 +679,8 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       </div>
     </div>
 
-    <div class="subhead">Logistiek &amp; Planning</div>
+    <div class="subhead">Logistiek (kar-niveau)</div>
     <div class="form-grid">
-      <div class="form-group">
-        <label>Planningsgroep</label>
-        <input id="d-planningsgroep" type="text" list="dl-planningsgroep" autocomplete="off">
-      </div>
       <div class="form-group">
         <label>Jaar *</label>
         <select id="d-jaar"><option value="">—</option></select>
@@ -704,44 +710,23 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
         <select id="d-transport"><option value=""></option></select>
       </div>
       <div class="form-group">
-        <label>Fust incl/excl</label>
-        <select id="d-fust_incl_excl"><option value=""></option></select>
-      </div>
-      <div class="form-group">
         <label>Type kar</label>
         <select id="d-type_kar"><option value=""></option></select>
       </div>
       <div class="form-group">
         <label>Aantal lagen/kar</label>
-        <input id="d-aantal_lagen_kar" type="number" min="0" oninput="recalcKarMath()">
+        <input id="d-aantal_lagen_kar" type="number" min="0" oninput="renderComponentPanels()">
       </div>
       <div class="form-group">
-        <label>Aantal fust/laag</label>
-        <input id="d-aantal_fust_laag" type="number" min="0" oninput="recalcKarMath()">
-      </div>
-      <div class="form-group">
-        <label>Aantal/fust</label>
-        <input id="d-aantal_per_fust" type="number" min="0" oninput="recalcKarMath()">
-      </div>
-      <div class="form-group">
-        <label>Aantal pl/kar <span class="hint" id="hint-pl-kar"></span></label>
-        <input id="d-aantal_pl_kar" type="number" min="0" oninput="markManual('aantal_pl_kar'); recalcKarMath()">
-      </div>
-      <div class="form-group">
-        <label>Aantal fust</label>
-        <input id="d-aantal_fust" type="number" min="0">
-      </div>
-      <div class="form-group">
-        <label>Aantal kar bruto <span class="hint" id="hint-kar-bruto"></span></label>
-        <input id="d-aantal_kar_bruto" type="number" step="0.01" min="0" oninput="markManual('aantal_kar_bruto')">
+        <label>Aantal kar bruto</label>
+        <input id="d-aantal_kar_bruto" type="number" step="0.01" min="0">
       </div>
     </div>
 
     <div class="subhead">Artikelen op de kar</div>
     <div class="mix-box show" id="mix-box">
       <div class="mix-cap" id="mix-cap">
-        <span><strong id="mix-filled">0</strong> / <strong id="mix-cap-total">0</strong> planten in kar (<span id="mix-pct">0</span>%)</span>
-        <div class="mix-bar"><div class="mix-bar-fill" id="mix-bar-fill" style="width:0%"></div></div>
+        <span><strong id="mix-art-count">0</strong> artikel(en) · belading <strong id="mix-filled">0</strong> pl · gepland <strong id="mix-gepland">0</strong></span>
         <span id="mix-cap-rest"></span>
       </div>
       <div class="comp-list" id="comp-list"></div>
@@ -751,36 +736,8 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       </div>
     </div>
 
-    <div class="subhead">Aantallen</div>
+    <div class="subhead">Kar-verpakking &amp; mix</div>
     <div class="form-grid">
-      <div class="form-group">
-        <label>Geplande aantallen</label>
-        <input id="d-geplande_aantallen" type="number" step="1" oninput="recalcKarMath()">
-      </div>
-    </div>
-
-    <div class="subhead">Verpakking algemeen</div>
-    <div class="form-grid">
-      <div class="form-group span2">
-        <label>Type verpakking</label>
-        <select id="d-type_verpakking"><option value=""></option></select>
-      </div>
-      <div class="form-group">
-        <label>Verpakking kleur</label>
-        <select id="d-verpakking_kleur"><option value=""></option></select>
-      </div>
-      <div class="form-group">
-        <label>BAAS / KLANT EAN</label>
-        <input id="d-ean" type="text">
-      </div>
-      <div class="form-group">
-        <label>Plantenpaspoort aanbrengen</label>
-        <select id="d-plantenpaspoort"><option value=""></option><option>Ja</option><option>Nee</option><option>N.v.t.</option></select>
-      </div>
-      <div class="form-group">
-        <label>Verkoopprijs consument (€)</label>
-        <input id="d-prijs_consument" type="number" step="0.01" min="0">
-      </div>
       <div class="form-group">
         <label>Sealen / strappen</label>
         <input id="d-sealen_strappen" type="text">
@@ -793,17 +750,13 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
         <label>Details klantmix</label>
         <input id="d-details_klantmix" type="text">
       </div>
-      <div class="form-group">
-        <label>Min. contract %</label>
-        <input id="d-min_contract_pct" type="number" min="0" max="100" step="1">
-      </div>
       <div class="form-group span2">
         <label>Ladingdrager­samenstelling</label>
         <input id="d-ladingdrager" type="text">
       </div>
     </div>
 
-    <div class="subhead">Bedrukkings-opties (vink aan om uit te klappen)</div>
+    <div class="subhead">Kar-bedrukking (vink aan om uit te klappen)</div>
     <div class="bedruk-list" id="bedruk-list"></div>
 
     <div class="subhead">Opmerking</div>
@@ -1036,7 +989,6 @@ function initLookups() {
   // (IOR is nu een tekstveld met datalist — wordt gevuld via refreshIorDatalists)
   fillSelect('d-verkoper', DATA.verkopers);
   fillSelect('d-transport', DATA.transport);
-  fillSelect('d-fust_incl_excl', DATA.fust_incl_excl);
   fillSelect('d-type_kar', DATA.kartypes);
 
   // Datalists
@@ -1067,11 +1019,7 @@ function initLookups() {
   const pots = Array.from(new Set(MASTER_ARTIKELEN.map(a => a.potmaat).filter(Boolean))).sort();
   $('picker-pot').insertAdjacentHTML('beforeend', pots.map(p => '<option value="'+esc(p)+'">'+esc(p)+'</option>').join(''));
 
-  // Verpakking-algemeen dropdowns
-  const VERP_TYPES = ['Onbedrukt - Kleur onbekend','Onbedrukt - Rood','Onbedrukt - Geel','Onbedrukt - Antraciet','Onbedrukt - Paars','Onbedrukt - Roze','Onbedrukt - Wit','Onbedrukt - Groen','Onbedrukt - TST','Bedrukt - NVT','Bedrukt - Per soort - Klant specifiek','Bedrukt - Per soort - Blooming Joy','Bedrukt - Per soort - Klant NVT','Bedrukt - Per variant - Klant specifiek','Bedrukt - Per variant - Blooming Joy','Bedrukt - Per variant - Klant NVT'];
-  const KLEUR = ['Terracotta','Antraciet','TST','Groen','Geel','Blauw','Rood','Roze','Paars','Wit'];
-  fillSelect('d-type_verpakking', VERP_TYPES);
-  fillSelect('d-verpakking_kleur', KLEUR);
+  // Verpakking-dropdowns (per component) — opties staan in globale VERP_TYPES/VERP_KLEUR
 
   // Trays datalist
   refreshTrayDatalist();
@@ -1529,9 +1477,13 @@ function renderTable() {
       + '<td class="num">'+(N(r.jaar)||'')+'</td>'
       + '<td class="num cell-edit" data-id="'+r.id+'" data-f="week">'+(N(r.week)||'')+'</td>'
       + '<td>'+esc(r.verlaaddag)+'</td>'
-      + '<td class="num cell-edit" data-id="'+r.id+'" data-f="geplande_aantallen">'+(fmt(N(r.geplande_aantallen)) || '')+'</td>'
+      + (regelComponenten(r).length
+          ? '<td class="num" title="Som van de artikelen — bewerk via de regel">'+(fmt(N(r.geplande_aantallen)) || '')+'</td>'
+          : '<td class="num cell-edit" data-id="'+r.id+'" data-f="geplande_aantallen">'+(fmt(N(r.geplande_aantallen)) || '')+'</td>')
       + '<td class="num">'+(fmt(N(r.afgenomen_totaal)) || '')+'</td>'
-      + '<td class="num cell-edit" data-id="'+r.id+'" data-f="prijs">'+(fmtPrijs(N(r.prijs)))+'</td>'
+      + (regelComponenten(r).length
+          ? '<td class="num" title="Prijs per artikel — bewerk via de regel">'+(r.prijs ? fmtPrijs(N(r.prijs)) : '·')+'</td>'
+          : '<td class="num cell-edit" data-id="'+r.id+'" data-f="prijs">'+(fmtPrijs(N(r.prijs)))+'</td>')
       + '<td>'+esc(r.type_kar)+'</td>'
       + '<td class="num">'+(fmt(N(r.aantal_kar_bruto)) || '')+'</td>'
       + '<td>'+(r.karposter?'✔':'')+'</td>'
@@ -1757,22 +1709,18 @@ function duplicateRow(id) {
 }
 
 /* === DRAWER (form) === */
-// KAR-niveau velden. Artikel-velden (productgroep/teelt/potmaat/bloeistadium/
-// teeltspecificatie/prijs) staan nu per component in r.componenten[].
+// KAR-niveau velden. Artikel-velden (product, planning, aantallen, fust,
+// verpakking, prijs + artikel-bedrukking) staan per component in r.componenten[].
 const DRAWER_FIELDS = [
   'status','vrc','vrc_info','ior','ior_info','leverancier','verkoper','gepland',
   'klant','eindklant','afzetland',
-  'planningsgroep',
-  'jaar','week','verlaaddag','losdag','actiedag','af_tuin','transport','fust_incl_excl',
-  'type_kar','aantal_lagen_kar','aantal_fust_laag','aantal_per_fust','aantal_pl_kar','aantal_fust','aantal_kar_bruto',
-  'geplande_aantallen',
-  // Verpakking algemeen
-  'type_verpakking','verpakking_kleur','ean','plantenpaspoort','prijs_consument','sealen_strappen',
-  'mix_type','details_klantmix','min_contract_pct','ladingdrager',
+  'jaar','week','verlaaddag','losdag','actiedag','af_tuin','transport',
+  'type_kar','aantal_lagen_kar','aantal_kar_bruto',
+  'sealen_strappen','mix_type','details_klantmix','ladingdrager',
   'opmerking'
 ];
 const DRAWER_BOOLS = []; // bedrukkings-checkboxes worden afgehandeld door BEDRUKKING_OPTIES / readBedrukFromForm
-const NUM_FIELDS = new Set(['jaar','week','prijs','aantal_lagen_kar','aantal_fust_laag','aantal_per_fust','aantal_pl_kar','aantal_fust','aantal_kar_bruto','geplande_aantallen','prijs_consument','min_contract_pct']);
+const NUM_FIELDS = new Set(['jaar','week','aantal_lagen_kar','aantal_kar_bruto']);
 
 function openDrawer(id) {
   editingId = id || null;
@@ -1800,21 +1748,6 @@ function openDrawer(id) {
   // Leverancier + IOR info zichtbaarheid synchroniseren met IOR-waarde
   toggleIorVelden();
 
-  // Reset auto-calc state: if loading existing regel with manually set values, treat as auto unless mismatch
-  manualOverride.aantal_pl_kar = false;
-  manualOverride.aantal_kar_bruto = false;
-  if (r) {
-    const expectedPerKar = N(r.aantal_lagen_kar) * N(r.aantal_fust_laag) * N(r.aantal_per_fust);
-    if (N(r.aantal_pl_kar) > 0 && expectedPerKar > 0 && N(r.aantal_pl_kar) !== expectedPerKar) {
-      manualOverride.aantal_pl_kar = true;
-    }
-    const expectedBruto = N(r.aantal_pl_kar) > 0 ? (N(r.geplande_aantallen) / N(r.aantal_pl_kar)) : 0;
-    if (N(r.aantal_kar_bruto) > 0 && expectedBruto > 0 && Math.abs(N(r.aantal_kar_bruto) - expectedBruto) > 0.02) {
-      manualOverride.aantal_kar_bruto = true;
-    }
-  }
-  refreshKarHints();
-
   // Kar-componenten (artikelen op de kar) — migreer oud formaat indien nodig
   currentComponenten = regelNaarComponenten(r);
   if (!currentComponenten.length) currentComponenten = [blankComponent()];
@@ -1836,6 +1769,8 @@ function closeDrawer() {
 /* === BEDRUKKINGS-OPTIES (config-driven) === */
 const WIE = ['', 'Baas', 'Klant', 'Derde'];
 const STICKER_OP = ['', 'Pot', 'Hoes', 'Beide'];
+const VERP_TYPES = ['Onbedrukt - Kleur onbekend','Onbedrukt - Rood','Onbedrukt - Geel','Onbedrukt - Antraciet','Onbedrukt - Paars','Onbedrukt - Roze','Onbedrukt - Wit','Onbedrukt - Groen','Onbedrukt - TST','Bedrukt - NVT','Bedrukt - Per soort - Klant specifiek','Bedrukt - Per soort - Blooming Joy','Bedrukt - Per soort - Klant NVT','Bedrukt - Per variant - Klant specifiek','Bedrukt - Per variant - Blooming Joy','Bedrukt - Per variant - Klant NVT'];
+const VERP_KLEUR = ['Terracotta','Antraciet','TST','Groen','Geel','Blauw','Rood','Roze','Paars','Wit'];
 
 // Each option has: key (bool field), label, icon, subFields[]
 // subFields: {f: <field suffix>, label, type: 'text'|'num'|'wie'|'select', opts?: [...]}
@@ -2013,48 +1948,51 @@ function readBedrukFromForm(r) {
   });
 }
 
-/* === KAR MATH (auto-calc) === */
-const manualOverride = {aantal_pl_kar:false, aantal_kar_bruto:false};
-function markManual(f) { manualOverride[f] = true; refreshKarHints(); }
-function refreshKarHints() {
-  $('hint-pl-kar').textContent = manualOverride.aantal_pl_kar ? '(handmatig)' : '(auto)';
-  $('hint-pl-kar').className = 'hint ' + (manualOverride.aantal_pl_kar ? '' : 'auto');
-  $('hint-kar-bruto').textContent = manualOverride.aantal_kar_bruto ? '(handmatig)' : '(auto)';
-  $('hint-kar-bruto').className = 'hint ' + (manualOverride.aantal_kar_bruto ? '' : 'auto');
-}
-function calcPerKar() {
-  return N($('d-aantal_lagen_kar').value) * N($('d-aantal_fust_laag').value) * N($('d-aantal_per_fust').value);
-}
-function recalcKarMath() {
-  const perKar = calcPerKar();
-  if (!manualOverride.aantal_pl_kar) {
-    $('d-aantal_pl_kar').value = perKar || '';
-  }
-  const plKar = N($('d-aantal_pl_kar').value);
-  const planned = N($('d-geplande_aantallen').value);
-  if (!manualOverride.aantal_kar_bruto) {
-    if (plKar > 0 && planned !== 0) {
-      const kar = planned / plKar;
-      $('d-aantal_kar_bruto').value = Math.round(kar*100)/100;
-    } else {
-      $('d-aantal_kar_bruto').value = '';
-    }
-  }
-  refreshKarHints();
-  refreshMixCap();
+/* === KAR MATH === */
+// Lagen/kar staat op kar-niveau; fust/laag + aantal/fust staan per component.
+// Suggestie voor belading van een component = lagen × fust/laag × aantal/fust.
+function calcCompPerKar(c) {
+  const lagen = N(($('d-aantal_lagen_kar') || {}).value);
+  return lagen * N(c.aantal_fust_laag) * N(c.aantal_per_fust);
 }
 
 /* === KAR-COMPONENTEN === */
 // Elke orderregel is een kar met >=1 artikel-componenten. Elk component draagt
-// artikel-detailvelden + eigen artikel-bedrukking. currentComponenten is de
-// bron van waarheid tijdens het bewerken; inputs schrijven er direct in.
+// alle artikel-velden (product, planning, aantallen, fust, verpakking, prijs)
+// + eigen artikel-bedrukking. currentComponenten is de bron van waarheid tijdens
+// het bewerken; inputs schrijven er direct in.
 let currentComponenten = [];
 
-const COMP_ARTIKEL_VELDEN = ['productgroep','teelt','potmaat','bloeistadium','teeltspecificatie','kleur','prijs'];
+// Schema van artikel-velden per component. grp bepaalt de sub-sectie in het paneel.
+const COMP_VELDEN = [
+  {f:'productgroep', label:'Productgroep', type:'datalist', dl:'dl-productgroep', grp:'product'},
+  {f:'teelt', label:'Teelt', type:'datalist', dl:'dl-teelt', grp:'product'},
+  {f:'potmaat', label:'Potmaat', type:'datalist', dl:'dl-potmaat', grp:'product'},
+  {f:'kleur', label:'Kleur', type:'text', grp:'product'},
+  {f:'bloeistadium', label:'Bloeistadium', type:'datalist', dl:'dl-bloeistadium', grp:'product'},
+  {f:'teeltspecificatie', label:'Teeltspecificatie', type:'datalist', dl:'dl-teeltspecificatie', grp:'product'},
+  {f:'planningsgroep', label:'Planningsgroep', type:'datalist', dl:'dl-planningsgroep', grp:'product'},
+  {f:'geplande_aantallen', label:'Geplande aantallen', type:'num', grp:'aantal'},
+  {f:'afgenomen_totaal', label:'Afgenomen totaal', type:'num', grp:'aantal'},
+  {f:'aantal_fust_laag', label:'Aantal fust/laag', type:'num', grp:'aantal'},
+  {f:'aantal_per_fust', label:'Aantal/fust', type:'num', grp:'aantal'},
+  {f:'aantal_fust', label:'Aantal fust', type:'num', grp:'aantal'},
+  {f:'fust_incl_excl', label:'Fust incl/excl', type:'select', optsKey:'fust_incl_excl', grp:'aantal'},
+  {f:'prijs', label:'Prijs (€)', type:'num', grp:'verpakking'},
+  {f:'prijs_consument', label:'Prijs consument (€)', type:'num', grp:'verpakking'},
+  {f:'min_contract_pct', label:'Min. contract %', type:'num', grp:'verpakking'},
+  {f:'type_verpakking', label:'Type verpakking', type:'select', optsList:'VERP_TYPES', grp:'verpakking'},
+  {f:'verpakking_kleur', label:'Verpakking kleur', type:'select', optsList:'VERP_KLEUR', grp:'verpakking'},
+  {f:'ean', label:'BAAS/KLANT EAN', type:'text', grp:'verpakking'},
+  {f:'plantenpaspoort', label:'Plantenpaspoort', type:'select', opts:['','Ja','Nee','N.v.t.'], grp:'verpakking'},
+];
+const COMP_NUM_VELDEN = new Set(COMP_VELDEN.filter(v => v.type === 'num').map(v => v.f).concat(['aantal_per_kar']));
+const COMP_VELD_NAMEN = ['artikelnr','naam'].concat(COMP_VELDEN.map(v => v.f)).concat(['aantal_per_kar']);
 
 function blankComponent() {
-  return {artikelnr:'', naam:'', productgroep:'', teelt:'', potmaat:'', bloeistadium:'',
-          teeltspecificatie:'', kleur:'', aantal_per_kar:0, prijs:0, _expanded:true};
+  const c = {_expanded:true};
+  COMP_VELD_NAMEN.forEach(f => { c[f] = COMP_NUM_VELDEN.has(f) ? 0 : ''; });
+  return c;
 }
 
 function colorFor(s) {
@@ -2071,30 +2009,44 @@ function colorFor(s) {
 }
 
 function refreshKarCap() {
-  const cap = calcPerKar();
   const filled = currentComponenten.reduce((s,c) => s + N(c.aantal_per_kar), 0);
+  const gepland = currentComponenten.reduce((s,c) => s + N(c.geplande_aantallen), 0);
+  if ($('mix-art-count')) $('mix-art-count').textContent = currentComponenten.length;
   if ($('mix-filled')) $('mix-filled').textContent = filled;
-  if ($('mix-cap-total')) $('mix-cap-total').textContent = cap || '?';
-  const pct = cap > 0 ? Math.round(filled / cap * 100) : 0;
-  if ($('mix-pct')) $('mix-pct').textContent = pct;
-  if ($('mix-bar-fill')) $('mix-bar-fill').style.width = Math.min(100, pct) + '%';
-  if ($('mix-cap')) $('mix-cap').classList.toggle('over', cap > 0 && filled > cap);
-  const rest = cap - filled;
-  if ($('mix-cap-rest')) $('mix-cap-rest').textContent = cap > 0
-    ? (rest > 0 ? ('nog ' + rest + ' planten vrij') : (rest === 0 ? 'kar precies vol' : Math.abs(rest) + ' over capaciteit'))
-    : 'stel eerst de kar-capaciteit in (lagen × fust/laag × per fust)';
+  if ($('mix-gepland')) $('mix-gepland').textContent = gepland;
+  const lagen = N(($('d-aantal_lagen_kar') || {}).value);
+  if ($('mix-cap-rest')) $('mix-cap-rest').textContent = lagen > 0
+    ? (lagen + ' lagen/kar ingesteld')
+    : 'tip: stel "Aantal lagen/kar" in voor belading-suggestie';
 }
 // alias zodat bestaande aanroepen blijven werken
 function refreshMixCap() { refreshKarCap(); }
 
-function compArtikelVeldHtml(c, i, f, label, datalist) {
-  const isNum = f === 'prijs';
-  const val = c[f] != null ? c[f] : '';
-  const dl = datalist ? ' list="'+datalist+'"' : '';
-  const type = isNum ? ' type="number" step="0.01" min="0"' : ' type="text"';
-  return '<div class="form-group"><label>'+esc(label)+'</label>'
-    + '<input'+type+dl+' value="'+esc(val===0?'':val)+'" '
-    + 'oninput="updateCompField('+i+',\''+f+'\',this.value)"></div>';
+function compSelectOpts(spec) {
+  if (spec.opts) return spec.opts;
+  if (spec.optsList === 'VERP_TYPES') return [''].concat(VERP_TYPES);
+  if (spec.optsList === 'VERP_KLEUR') return [''].concat(VERP_KLEUR);
+  if (spec.optsKey === 'fust_incl_excl') return [''].concat(DATA.fust_incl_excl || []);
+  return [''];
+}
+function compFieldHtml(c, i, spec) {
+  const val = c[spec.f] != null ? c[spec.f] : '';
+  let input;
+  if (spec.type === 'num') {
+    const step = spec.f.indexOf('prijs') >= 0 ? '0.01' : '1';
+    input = '<input type="number" step="'+step+'" min="0" value="'+esc(val===0?'':val)+'" '
+      + 'oninput="updateCompField('+i+',\''+spec.f+'\',this.value)">';
+  } else if (spec.type === 'datalist') {
+    input = '<input type="text" list="'+spec.dl+'" autocomplete="off" value="'+esc(val)+'" '
+      + 'oninput="updateCompField('+i+',\''+spec.f+'\',this.value)">';
+  } else if (spec.type === 'select') {
+    input = '<select onchange="updateCompField('+i+',\''+spec.f+'\',this.value)">'
+      + compSelectOpts(spec).map(o => '<option value="'+esc(o)+'"'+(String(val)===String(o)?' selected':'')+'>'+esc(o)+'</option>').join('')
+      + '</select>';
+  } else {
+    input = '<input type="text" value="'+esc(val)+'" oninput="updateCompField('+i+',\''+spec.f+'\',this.value)">';
+  }
+  return '<div class="form-group"><label>'+esc(spec.label)+'</label>'+input+'</div>';
 }
 
 function compBedrukCardHtml(c, i, o) {
@@ -2145,6 +2097,11 @@ function renderComponentPanels() {
     const imgClick = imgUrl ? ' onclick="event.stopPropagation();openImagePreview(\''+(imgUrl||'').replace(/\'/g,'\\\\\\\'')+'\', \''+esc(c.naam||'').replace(/\'/g,'')+'\')"' : '';
     const open = c._expanded !== false;
     const bedrukCount = ARTIKEL_BEDRUKKING.filter(o => c[o.key]).length;
+    const beladingHint = calcCompPerKar(c);
+    const hintHtml = (beladingHint > 0 && beladingHint !== N(c.aantal_per_kar))
+      ? '<span class="comp-q-hint" title="Suggestie uit lagen × fust/laag × aantal/fust — klik om over te nemen" '
+        + 'onclick="event.stopPropagation();updateCompField('+i+',\'aantal_per_kar\','+beladingHint+');renderComponentPanels()">≈'+beladingHint+'</span>'
+      : '';
     const head = '<div class="comp-head" onclick="toggleCompExpand('+i+')">'
       + '<span class="comp-chevron">'+(open?'▾':'▸')+'</span>'
       + '<span class="swatch" style="background:'+swatchColor+'" title="Kleur"></span>'
@@ -2152,26 +2109,22 @@ function renderComponentPanels() {
       + '<span class="comp-naam">'+esc(c.naam || c.teelt || '(geen naam)')+'</span>'
       + '<span class="comp-nr">'+esc(c.artikelnr || '')+'</span>'
       + (bedrukCount ? '<span class="comp-bedruk-badge" title="'+bedrukCount+' bedrukkings-optie(s)">'+bedrukCount+'×</span>' : '')
-      + '<input type="number" min="0" step="1" class="comp-q" title="Aantal op deze kar" value="'+(c.aantal_per_kar||0)+'" '
+      + hintHtml
+      + '<input type="number" min="0" step="1" class="comp-q" title="Belading: aantal planten op de kar" value="'+(c.aantal_per_kar||0)+'" '
         + 'onclick="event.stopPropagation()" oninput="updateCompField('+i+',\'aantal_per_kar\',this.value);refreshKarCap()">'
-      + '<span class="comp-q-lbl">/kar</span>'
+      + '<span class="comp-q-lbl">pl/kar</span>'
       + '<button type="button" class="x" onclick="event.stopPropagation();removeComponent('+i+')" title="Verwijderen">×</button>'
       + '</div>';
-    const fields = '<div class="form-grid comp-fields">'
-      + compArtikelVeldHtml(c, i, 'productgroep', 'Productgroep', 'dl-productgroep')
-      + compArtikelVeldHtml(c, i, 'teelt', 'Teelt', 'dl-teelt')
-      + compArtikelVeldHtml(c, i, 'potmaat', 'Potmaat', 'dl-potmaat')
-      + compArtikelVeldHtml(c, i, 'kleur', 'Kleur', null)
-      + compArtikelVeldHtml(c, i, 'bloeistadium', 'Bloeistadium', 'dl-bloeistadium')
-      + compArtikelVeldHtml(c, i, 'teeltspecificatie', 'Teeltspecificatie', 'dl-teeltspecificatie')
-      + compArtikelVeldHtml(c, i, 'prijs', 'Prijs (€)', null)
-      + '</div>';
-    const bedruk = '<div class="comp-bedruk">'
-      + ARTIKEL_BEDRUKKING.map(o => compBedrukCardHtml(c, i, o)).join('')
-      + '</div>';
+    const grp = (g) => '<div class="form-grid comp-fields">'
+      + COMP_VELDEN.filter(v => v.grp === g).map(s => compFieldHtml(c, i, s)).join('') + '</div>';
+    const body = '<div class="comp-sub-label">Product &amp; planning</div>' + grp('product')
+      + '<div class="comp-sub-label">Aantallen &amp; fust</div>' + grp('aantal')
+      + '<div class="comp-sub-label">Prijs &amp; verpakking</div>' + grp('verpakking')
+      + '<div class="comp-sub-label">Artikel-bedrukking</div>'
+      + '<div class="comp-bedruk">' + ARTIKEL_BEDRUKKING.map(o => compBedrukCardHtml(c, i, o)).join('') + '</div>';
     return '<div class="comp-panel'+(open?' open':'')+'">'
       + head
-      + '<div class="comp-body">' + fields + bedruk + '</div>'
+      + '<div class="comp-body">' + body + '</div>'
     + '</div>';
   }).join('');
   refreshKarCap();
@@ -2181,7 +2134,7 @@ function updateCompField(i, f, v) {
   const c = currentComponenten[i];
   if (!c) return;
   if (typeof v === 'boolean') { c[f] = v; renderComponentPanels(); return; }
-  if (f === 'aantal_per_kar' || f === 'prijs' || isBedrukNumField(f)) {
+  if (COMP_NUM_VELDEN.has(f) || isBedrukNumField(f)) {
     c[f] = N(v);
   } else {
     c[f] = v;
@@ -2209,12 +2162,7 @@ function removeComponent(i) {
 }
 
 function addFreeComponent() {
-  const cap = calcPerKar();
-  const filled = currentComponenten.reduce((s,c) => s + N(c.aantal_per_kar), 0);
-  const rest = Math.max(0, cap - filled);
-  const c = blankComponent();
-  c.aantal_per_kar = rest || 0;
-  currentComponenten.push(c);
+  currentComponenten.push(blankComponent());
   renderComponentPanels();
 }
 
@@ -2239,7 +2187,7 @@ function regelNaarComponenten(r) {
     const c = blankComponent();
     c.artikelnr = r.artikelnr || '';
     c.naam = r.naam || '';
-    COMP_ARTIKEL_VELDEN.forEach(f => { if (r[f] != null && r[f] !== '') c[f] = r[f]; });
+    COMP_VELDEN.forEach(v => { if (r[v.f] != null && r[v.f] !== '') c[v.f] = r[v.f]; });
     c.aantal_per_kar = N(r.aantal_pl_kar) || 0;
     // Artikel-bedrukking van regel-niveau meenemen naar het component
     ARTIKEL_BEDRUKKING.forEach(o => {
@@ -2259,10 +2207,8 @@ function regelNaarComponenten(r) {
 function componentenVoorOpslag() {
   return currentComponenten.map(c => {
     const out = {};
-    ['artikelnr','naam'].concat(COMP_ARTIKEL_VELDEN).forEach(f => { out[f] = c[f] != null ? c[f] : ''; });
+    COMP_VELD_NAMEN.forEach(f => { out[f] = c[f] != null ? (COMP_NUM_VELDEN.has(f) ? N(c[f]) : c[f]) : (COMP_NUM_VELDEN.has(f) ? 0 : ''); });
     if (c.image_url) out.image_url = c.image_url;
-    out.aantal_per_kar = N(c.aantal_per_kar);
-    out.prijs = N(c.prijs);
     ARTIKEL_BEDRUKKING.forEach(o => {
       out[o.key] = !!c[o.key];
       o.subFields.forEach(sf => {
@@ -2432,9 +2378,6 @@ function renderPickerList() {
 }
 function pickArtikel(jsonStr) {
   const a = JSON.parse(jsonStr);
-  const cap = calcPerKar();
-  const filled = currentComponenten.reduce((s,c) => s + N(c.aantal_per_kar), 0);
-  const rest = Math.max(0, cap - filled);
   const c = blankComponent();
   c.artikelnr = a.artikelnr || '';
   c.naam = a.naam || '';
@@ -2443,7 +2386,6 @@ function pickArtikel(jsonStr) {
   c.teelt = a.soort || '';
   c.teeltspecificatie = a.thema || '';
   if (a.image_url) c.image_url = a.image_url;
-  c.aantal_per_kar = rest || 0;
   currentComponenten.push(c);
   renderComponentPanels();
   closeMasterPicker();
@@ -2464,23 +2406,35 @@ function readForm() {
   r.karposter_ja_nee = r.karposter ? 'Ja' : 'Nee';
   // Kar-componenten (artikelen op de kar)
   r.componenten = componentenVoorOpslag();
-  // aantal_pl_kar = som van componenten als die gevuld zijn
-  const compTotal = r.componenten.reduce((s,c) => s + N(c.aantal_per_kar), 0);
+  applyComponentenCache(r);
+  return r;
+}
+
+// Gedenormaliseerde cache: vat de componenten samen op regel-niveau zodat
+// bestaande tabel/dashboard/export blijven werken tot fase 2/3 die herzien.
+function applyComponentenCache(r) {
+  const comps = r.componenten || [];
+  const c0 = comps[0] || {};
+  const sum = (f) => comps.reduce((s,c) => s + N(c[f]), 0);
+  // tekst-velden: eerste component (representatief voor weergave/export)
+  ['artikelnr','naam','productgroep','teelt','potmaat','bloeistadium','teeltspecificatie',
+   'planningsgroep','fust_incl_excl','type_verpakking','verpakking_kleur','ean','plantenpaspoort']
+    .forEach(f => { r[f] = c0[f] || ''; });
+  r.prijs_consument = N(c0.prijs_consument);
+  r.min_contract_pct = N(c0.min_contract_pct);
+  r.aantal_fust_laag = N(c0.aantal_fust_laag);
+  r.aantal_per_fust = N(c0.aantal_per_fust);
+  // som-velden
+  r.geplande_aantallen = sum('geplande_aantallen');
+  r.afgenomen_totaal = sum('afgenomen_totaal');
+  r.aantal_fust = sum('aantal_fust');
+  const compTotal = sum('aantal_per_kar');
   if (compTotal > 0) r.aantal_pl_kar = compTotal;
-  // Gedenormaliseerde cache: kopieer eerste component naar regel-niveau zodat
-  // tabel/dashboard/export blijven werken tot fase 2/3 die herzien.
-  const c0 = r.componenten[0] || {};
-  r.artikelnr = c0.artikelnr || '';
-  r.naam = c0.naam || '';
-  r.productgroep = c0.productgroep || '';
-  r.teelt = c0.teelt || '';
-  r.potmaat = c0.potmaat || '';
-  r.bloeistadium = c0.bloeistadium || '';
-  r.teeltspecificatie = c0.teeltspecificatie || '';
-  r.prijs = N(c0.prijs);
+  // prijs: gelijk over alle componenten -> die prijs, anders leeg (weergave)
+  const prijzen = Array.from(new Set(comps.map(c => N(c.prijs))));
+  r.prijs = prijzen.length === 1 ? prijzen[0] : 0;
   r.sticker = !!c0.sticker;
   r.sticker_ja_nee = r.sticker ? 'Ja' : 'Nee';
-  return r;
 }
 
 function saveOrder() {

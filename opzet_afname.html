@@ -710,8 +710,8 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
         <select id="d-transport"><option value=""></option></select>
       </div>
       <div class="form-group">
-        <label>Type kar</label>
-        <select id="d-type_kar"><option value=""></option></select>
+        <label>Type kar (ladingdrager)</label>
+        <select id="d-type_kar" onchange="onTypeKarChange()"><option value=""></option></select>
       </div>
       <div class="form-group">
         <label>Aantal lagen/kar</label>
@@ -739,10 +739,6 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
     <div class="subhead">Kar-verpakking &amp; mix</div>
     <div class="form-grid">
       <div class="form-group">
-        <label>Sealen / strappen</label>
-        <input id="d-sealen_strappen" type="text">
-      </div>
-      <div class="form-group">
         <label>BAASMIX / KLANTMIX</label>
         <select id="d-mix_type"><option value=""></option><option>BAASMIX</option><option>KLANTMIX</option></select>
       </div>
@@ -756,7 +752,7 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       </div>
     </div>
 
-    <div class="subhead">Kar-bedrukking (vink aan om uit te klappen)</div>
+    <div class="subhead">Kar-opties &amp; bedrukking (vink aan om uit te klappen)</div>
     <div class="bedruk-list" id="bedruk-list"></div>
 
     <div class="subhead">Opmerking</div>
@@ -914,6 +910,7 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 <datalist id="dl-verlaaddag"></datalist>
 <datalist id="dl-productgroep"></datalist>
 <datalist id="dl-bloeistadium"></datalist>
+<datalist id="dl-opzetstuk"></datalist>
 <datalist id="dl-tray"></datalist>
 <datalist id="dl-sticker"></datalist>
 <datalist id="dl-etiket"></datalist>
@@ -989,7 +986,11 @@ function initLookups() {
   // (IOR is nu een tekstveld met datalist — wordt gevuld via refreshIorDatalists)
   fillSelect('d-verkoper', DATA.verkopers);
   fillSelect('d-transport', DATA.transport);
-  fillSelect('d-type_kar', DATA.kartypes);
+  // Type kar = Agriware ladingdragers (code + omschrijving)
+  if ($('d-type_kar')) {
+    $('d-type_kar').innerHTML = '<option value=""></option>'
+      + LADINGDRAGERS.map(l => '<option value="'+esc(l.code)+'">'+esc(l.code+' — '+l.oms)+'</option>').join('');
+  }
 
   // Datalists
   fillDatalist('dl-vrc', DATA.vrcs);
@@ -1003,6 +1004,7 @@ function initLookups() {
   fillDatalist('dl-verlaaddag', DATA.verlaaddagen);
   fillDatalist('dl-productgroep', DATA.productgroepen);
   fillDatalist('dl-bloeistadium', DATA.bloeistadia);
+  fillDatalist('dl-opzetstuk', OPZETSTUKKEN);
 
   // (Agriware-artikelen datalists worden gevuld door refreshAgriwareDatalists na renderBedrukCards)
 
@@ -1716,7 +1718,7 @@ const DRAWER_FIELDS = [
   'klant','eindklant','afzetland',
   'jaar','week','verlaaddag','losdag','actiedag','af_tuin','transport',
   'type_kar','aantal_lagen_kar','aantal_kar_bruto',
-  'sealen_strappen','mix_type','details_klantmix','ladingdrager',
+  'mix_type','details_klantmix','ladingdrager',
   'opmerking'
 ];
 const DRAWER_BOOLS = []; // bedrukkings-checkboxes worden afgehandeld door BEDRUKKING_OPTIES / readBedrukFromForm
@@ -1753,6 +1755,11 @@ function openDrawer(id) {
   if (!currentComponenten.length) currentComponenten = [blankComponent()];
   renderComponentPanels();
 
+  // Migreer oud sealen/strappen-tekstveld naar bedrukking-optie (vinkje + keuze)
+  if (r && typeof r.sealen_strappen === 'string' && r.sealen_strappen) {
+    if (!r.sealen_strappen_keuze) r.sealen_strappen_keuze = r.sealen_strappen;
+    r.sealen_strappen = true;
+  }
   // Bedrukkings-opties op KAR-niveau: laad checkbox + alle sub-velden
   loadBedrukIntoForm(r || {});
 
@@ -1838,10 +1845,50 @@ const BEDRUKKING_OPTIES = [
       {f:'aantal', label:'Aantal overpakken', type:'num'},
       {f:'prijs_per_eenheid', label:'Prijs/eenheid (€)', type:'num'},
   ]},
+  { key:'opzetstuk', label:'Opzetstuk', icon:'🔧', subFields:[
+      {f:'type', label:'Type opzetstuk', type:'datalist', datalist:'dl-opzetstuk'},
+      {f:'aantal', label:'Aantal/kar', type:'num'},
+      {f:'wie_regelt', label:'Wie regelt', type:'wie'},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+  { key:'sealen_strappen', label:'Sealen / strappen', icon:'🎀', subFields:[
+      {f:'keuze', label:'Wat', type:'select', opts:['','Sealen','Strappen','Sealen en strappen']},
+      {f:'wie_betaald', label:'Wie betaald', type:'wie'},
+  ]},
+];
+
+// Ladingdragers (kar-types) — uit Agriware. lagen = vaste lagen (default).
+const LADINGDRAGERS = [
+  {code:'1/2 DC', oms:'1/2 DC kar / 115 cm stang, 18 gaats', lagen:1, soort:'DC-kar'},
+  {code:'1/2 EUP', oms:'Halve europallet', lagen:1, soort:'DC-kar'},
+  {code:'1/3 DC', oms:'1/3 DC kar / 77,5 cm stang, 10 gaats', lagen:1, soort:'DC-kar'},
+  {code:'AHCN', oms:'Albert Heijn container', lagen:1, soort:'DC-kar'},
+  {code:'BPAL', oms:'Blokpallet', lagen:1, soort:'Cheppallet'},
+  {code:'CC', oms:'CC-Tag6', lagen:1, soort:'CC-kar'},
+  {code:'CHEP', oms:'Chep Pallet', lagen:1, soort:'Cheppallet'},
+  {code:'DC', oms:'DC kar / 180cm stang, 30 gaats', lagen:1, soort:'DC-kar'},
+  {code:'DC28', oms:'DC kar / 165 cm stang, 28 gaats', lagen:1, soort:'DC-kar'},
+  {code:'DR', oms:'Deventer Rolcontainer Plus', lagen:3, soort:'DC-kar'},
+  {code:'EC', oms:'Eurocontainer / 110 cm stang', lagen:1, soort:'Euro container'},
+  {code:'EMP', oms:'Eenmalige pallet', lagen:1, soort:'Pallet'},
+  {code:'EUP', oms:'Europallet', lagen:1, soort:'Euro pallet'},
+  {code:'IFCO', oms:'IFCO', lagen:0, soort:'Geen'},
+  {code:'JUMBO', oms:'Jumbo Container', lagen:1, soort:'DC-kar'},
+  {code:'LOS', oms:'Los', lagen:0, soort:'Geen'},
+  {code:'MDOOS', oms:'Monsterdoos', lagen:10, soort:'Veilingkar'},
+  {code:'PLUS', oms:'Plus container', lagen:1, soort:'DC-kar'},
+  {code:'STW', oms:'Stapelwagen FH', lagen:4, soort:'Veilingkar'},
+  {code:'VVR', oms:'Huurkarren Plus', lagen:4, soort:'DC-kar'},
+];
+// Opzetstukken — uit Agriware (gaats-type per ladingdrager)
+const OPZETSTUKKEN = [
+  '08gaats ijzer (DC)','08gaats ijzer (CC)','08gaats kunststof (DC)','08gaats kunststof (CC)',
+  '12gaats ijzer (DC)','12gaats ijzer (CC)','00gaats kunststof (DC)','00gaats kunststof (CC)',
+  '00gaats hout (DC)','00gaats hout (CC)'
 ];
 
 // Bedrukking-splitsing: karposter + karsticker horen bij de KAR, de rest per ARTIKEL/component
-const KAR_BEDRUK_KEYS = new Set(['karposter','karsticker']);
+const KAR_BEDRUK_KEYS = new Set(['karposter','karsticker','opzetstuk','sealen_strappen']);
 const KAR_BEDRUKKING = BEDRUKKING_OPTIES.filter(o => KAR_BEDRUK_KEYS.has(o.key));
 const ARTIKEL_BEDRUKKING = BEDRUKKING_OPTIES.filter(o => !KAR_BEDRUK_KEYS.has(o.key));
 
@@ -1954,6 +2001,15 @@ function readBedrukFromForm(r) {
 function calcCompPerKar(c) {
   const lagen = N(($('d-aantal_lagen_kar') || {}).value);
   return lagen * N(c.aantal_fust_laag) * N(c.aantal_per_fust);
+}
+
+// Bij keuze van een ladingdrager: vul lagen/kar voor met de vaste lagen.
+function onTypeKarChange() {
+  const ld = LADINGDRAGERS.find(l => l.code === ($('d-type_kar') || {}).value);
+  if (ld && ld.lagen > 0 && !N(($('d-aantal_lagen_kar') || {}).value)) {
+    $('d-aantal_lagen_kar').value = ld.lagen;
+  }
+  renderComponentPanels();
 }
 
 /* === KAR-COMPONENTEN === */

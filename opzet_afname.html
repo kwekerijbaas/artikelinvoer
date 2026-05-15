@@ -207,6 +207,18 @@ header .sub{opacity:.8;font-size:.8rem}
 .tbl td.num{text-align:right;font-variant-numeric:tabular-nums}
 .tbl td.neg{color:var(--rood);font-weight:600}
 .tbl td.action-cell{white-space:nowrap}
+/* Kar-uitklap: chevron + sub-rij styling */
+.tbl th.kar-chev-th,.tbl td.kar-chev-td{width:22px;padding:0 2px;text-align:center}
+.kar-chev{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;cursor:pointer;color:#666;font-size:.85rem;user-select:none;border-radius:3px}
+.kar-chev:hover{background:#e8f5e9;color:var(--groen-dark)}
+.kar-chev.no-comp{visibility:hidden}
+.tbl tr.kar-row.expanded td{background:#f3f8f3}
+.tbl tr.comp-row td{background:#fcfdfb;font-size:.78rem;color:#444;border-bottom:1px dashed #e8e8e8}
+.tbl tr.comp-row:hover td{background:#eef7ee}
+.tbl tr.comp-row td.comp-cont{padding-left:18px;color:#222}
+.comp-art-nr{font-size:.7rem;color:#888;margin-right:6px;font-family:ui-monospace,monospace}
+.comp-mini-badge{display:inline-block;background:#eee;color:#555;font-size:.66rem;padding:1px 5px;border-radius:8px;margin-left:4px;font-weight:600}
+.tbl tr.comp-row td.comp-empty{background:#fcfdfb}
 .col-resize-handle{position:absolute;top:0;right:0;width:6px;height:100%;cursor:col-resize;user-select:none;z-index:3}
 .col-resize-handle:hover{background:rgba(255,255,255,.35)}
 .col-resize-handle.dragging{background:rgba(255,255,255,.55)}
@@ -532,10 +544,16 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
     </div>
 
     <div class="count-text" id="row-count">0 regels</div>
+    <div style="margin:4px 0 6px;display:flex;gap:6px;align-items:center;font-size:.8rem">
+      <button class="btn btn-secondary" onclick="expandAllKar()" title="Toon alle artikelen onder elke kar">▾ Alles uitklappen</button>
+      <button class="btn btn-secondary" onclick="collapseAllKar()" title="Verberg artikelen onder elke kar">▸ Alles inklappen</button>
+      <span style="color:#888;font-size:.74rem">Standaard staan karren met meerdere artikelen uitgeklapt</span>
+    </div>
 
     <div class="tbl-wrap">
       <table class="tbl">
         <thead><tr>
+          <th class="no-sort kar-chev-th"></th>
           <th class="no-sort"><input type="checkbox" id="sel-all" onchange="toggleSelectAll(this.checked)"></th>
           <th data-col="status" onclick="sortBy('status')">St.</th>
           <th data-col="vrc" onclick="sortBy('vrc')">VRC</th>
@@ -1488,6 +1506,48 @@ function updateSortIndicators() {
   });
 }
 
+// Kar-uitklap state (welke karren expliciet door gebruiker getoggled zijn).
+// Default: kar met >1 artikel = uitgeklapt, kar met 1 artikel = ingeklapt.
+let karForcedExpanded = new Set();
+let karForcedCollapsed = new Set();
+function isKarExpanded(r) {
+  const comps = regelComponenten(r);
+  if (karForcedCollapsed.has(r.id)) return false;
+  if (karForcedExpanded.has(r.id)) return true;
+  return comps.length > 1;
+}
+function toggleKarExpand(id) {
+  const r = regels.find(x => x.id === id);
+  if (!r) return;
+  if (isKarExpanded(r)) { karForcedCollapsed.add(id); karForcedExpanded.delete(id); }
+  else { karForcedExpanded.add(id); karForcedCollapsed.delete(id); }
+  persistKarExpand();
+  renderTable();
+}
+function expandAllKar() {
+  karForcedCollapsed.clear();
+  applyFilters(regels).forEach(r => karForcedExpanded.add(r.id));
+  persistKarExpand(); renderTable();
+}
+function collapseAllKar() {
+  karForcedExpanded.clear();
+  applyFilters(regels).forEach(r => karForcedCollapsed.add(r.id));
+  persistKarExpand(); renderTable();
+}
+function persistKarExpand() {
+  try {
+    localStorage.setItem('karForcedExpanded', JSON.stringify([...karForcedExpanded]));
+    localStorage.setItem('karForcedCollapsed', JSON.stringify([...karForcedCollapsed]));
+  } catch(e) {}
+}
+function loadKarExpand() {
+  try {
+    karForcedExpanded = new Set(JSON.parse(localStorage.getItem('karForcedExpanded')||'[]'));
+    karForcedCollapsed = new Set(JSON.parse(localStorage.getItem('karForcedCollapsed')||'[]'));
+  } catch(e) { karForcedExpanded = new Set(); karForcedCollapsed = new Set(); }
+}
+loadKarExpand();
+
 function renderTable() {
   let data = applyFilters(regels);
   if (sortCol) {
@@ -1512,9 +1572,30 @@ function renderTable() {
   const tbody = $('tbl-body');
   const fmt = n => (typeof n === 'number' && n !== 0) ? n.toLocaleString('nl-NL') : '';
   const fmtPrijs = n => (typeof n === 'number' && n !== 0) ? '€ '+n.toFixed(3) : '';
-  const rowHtml = (r) => {
+
+  // KAR-RIJ: kar-niveau info. Productkolommen + St + Prijs zijn leeg bij uitgeklapt;
+  // bij ingeklapt tonen we het 1e artikel als representatief.
+  const karRowHtml = (r) => {
+    const comps = regelComponenten(r);
+    const expanded = isKarExpanded(r);
+    const showArt = !expanded; // artikel-cellen in parent alleen bij ingeklapt
+    const c0 = comps[0] || {};
     const sel = selectedIds.has(r.id) ? ' selected' : '';
-    return '<tr class="'+sel.trim()+'">'
+    const chev = comps.length > 1
+      ? '<span class="kar-chev" onclick="event.stopPropagation();toggleKarExpand(\''+r.id+'\')" title="'+(expanded?'Inklappen':'Uitklappen')+'">'+(expanded?'▾':'▸')+'</span>'
+      : (comps.length === 1
+          ? '<span class="kar-chev" onclick="event.stopPropagation();toggleKarExpand(\''+r.id+'\')" title="'+(expanded?'Inklappen':'Uitklappen')+'">'+(expanded?'▾':'▸')+'</span>'
+          : '<span class="kar-chev no-comp">▸</span>');
+    const teeltCell = showArt
+      ? '<td title="'+esc(mixTooltip(r) || r.teeltspecificatie || '')+'">'
+          + esc(c0.teelt || r.teelt || '')
+          + ((comps.length > 1) ? ' <span class="mix-badge" title="Kar met '+comps.length+' artikelen">'+comps.length+' art.</span>' : '')
+        + '</td>'
+      : '<td><span style="color:#888;font-size:.74rem" title="Klik chevron om in te klappen">'
+          + comps.length + ' artikel' + (comps.length===1?'':'en')
+        + '</span></td>';
+    return '<tr class="kar-row'+(expanded?' expanded':'')+sel+'" data-id="'+r.id+'">'
+      + '<td class="kar-chev-td">'+chev+'</td>'
       + '<td><input type="checkbox" '+(selectedIds.has(r.id)?'checked':'')+' onchange="toggleSelect(\''+r.id+'\', this.checked)"></td>'
       + '<td><span class="status-badge status-'+esc(r.status||'Z')+'" title="'+esc(statusLabel(r.status))+'">'+esc(r.status||'?')+'</span></td>'
       + '<td>'
@@ -1525,28 +1606,25 @@ function renderTable() {
       + '</td>'
       + '<td>'+esc(r.klant)+'</td>'
       + '<td>'+esc(r.eindklant)+'</td>'
-      + '<td>'+esc(r.productgroep)+'</td>'
-      + '<td title="'+esc(mixTooltip(r) || r.teeltspecificatie)+'">'
-        + esc(r.teelt)
-        + ((regelComponenten(r).length > 1)
-            ? ' <span class="mix-badge" title="Kar met '+regelComponenten(r).length+' artikelen">'+regelComponenten(r).length+' art.</span>'
-            : '')
-        + '</td>'
-      + '<td>'+esc(r.potmaat)+'</td>'
+      + '<td>'+(showArt ? esc(c0.productgroep || r.productgroep || '') : '')+'</td>'
+      + teeltCell
+      + '<td>'+(showArt ? esc(c0.potmaat || r.potmaat || '') : '')+'</td>'
       + '<td class="num">'+(N(r.jaar)||'')+'</td>'
       + '<td class="num cell-edit" data-id="'+r.id+'" data-f="week">'+(N(r.week)||'')+'</td>'
       + '<td>'+esc(r.verlaaddag)+'</td>'
-      + (regelComponenten(r).length
+      + (comps.length
           ? '<td class="num" title="Som van de artikelen — bewerk via de regel">'+(fmt(N(r.geplande_aantallen)) || '')+'</td>'
           : '<td class="num cell-edit" data-id="'+r.id+'" data-f="geplande_aantallen">'+(fmt(N(r.geplande_aantallen)) || '')+'</td>')
       + '<td class="num">'+(fmt(N(r.afgenomen_totaal)) || '')+'</td>'
-      + (regelComponenten(r).length
-          ? '<td class="num" title="Prijs per artikel — bewerk via de regel">'+(r.prijs ? fmtPrijs(N(r.prijs)) : '·')+'</td>'
-          : '<td class="num cell-edit" data-id="'+r.id+'" data-f="prijs">'+(fmtPrijs(N(r.prijs)))+'</td>')
+      + (showArt
+          ? (comps.length
+              ? '<td class="num" title="Prijs per artikel — bewerk via de regel">'+(r.prijs ? fmtPrijs(N(r.prijs)) : '·')+'</td>'
+              : '<td class="num cell-edit" data-id="'+r.id+'" data-f="prijs">'+(fmtPrijs(N(r.prijs)))+'</td>')
+          : '<td class="num"></td>')
       + '<td>'+esc(r.type_kar)+'</td>'
       + '<td class="num">'+(fmt(N(r.aantal_kar_bruto)) || '')+'</td>'
       + '<td>'+(r.karposter?'✔':'')+'</td>'
-      + '<td>'+(r.sticker?'✔':'')+'</td>'
+      + '<td>'+(showArt ? (r.sticker?'✔':'') : '')+'</td>'
       + '<td>'+(r.karsticker?'✔':'')+'</td>'
       + '<td class="action-cell">'
         + '<button class="btn btn-edit" onclick="openDrawer(\''+r.id+'\')" title="Bewerken">✎</button> '
@@ -1557,10 +1635,48 @@ function renderTable() {
     + '</tr>';
   };
 
+  // COMP-RIJ: subrij onder de kar, één per artikel. Artikel-info in product/teelt/pot/prijs/St.
+  const compRowHtml = (r, c, ci) => {
+    return '<tr class="comp-row" data-id="'+r.id+'" data-ci="'+ci+'" onclick="openDrawer(\''+r.id+'\')">'
+      + '<td class="kar-chev-td"></td>'
+      + '<td></td>'
+      + '<td></td>'
+      + '<td></td>'
+      + '<td></td>'
+      + '<td></td>'
+      + '<td class="comp-cont"><span class="comp-art-nr">'+esc(c.artikelnr || '-')+'</span>'+esc(c.productgroep || '')+'</td>'
+      + '<td>'+esc(c.naam || c.teelt || '')
+        + (c.kleur ? ' <span class="comp-mini-badge" title="Kleur">'+esc(c.kleur)+'</span>' : '')
+        + (c.bloeistadium ? ' <span class="comp-mini-badge" title="Bloeistadium" style="background:#e3f2fd">St '+esc(c.bloeistadium)+'</span>' : '')
+        + '</td>'
+      + '<td>'+esc(c.potmaat || '')+'</td>'
+      + '<td></td>'
+      + '<td></td>'
+      + '<td></td>'
+      + '<td class="num" title="Aantal planten op de kar voor dit artikel">'+(N(c.aantal_per_kar) ? fmt(N(c.aantal_per_kar)) + '<span style=\"color:#888;font-size:.66rem\"> pl/kar</span>' : '')+'</td>'
+      + '<td class="num"></td>'
+      + '<td class="num">'+(N(c.prijs) ? fmtPrijs(N(c.prijs)) : '')+'</td>'
+      + '<td></td>'
+      + '<td></td>'
+      + '<td></td>'
+      + '<td>'+(c.sticker?'✔':'')+'</td>'
+      + '<td></td>'
+      + '<td class="action-cell"></td>'
+    + '</tr>';
+  };
+
+  const rowHtml = (r) => {
+    let h = karRowHtml(r);
+    if (isKarExpanded(r)) {
+      const comps = regelComponenten(r);
+      h += comps.map((c, ci) => compRowHtml(r, c, ci)).join('');
+    }
+    return h;
+  };
+
   // Render flat or grouped
   let html = '';
   if (groupMode === 'vrc') {
-    // Group by VRC (keep current sort order within each group)
     const groups = new Map();
     const noVrcKey = '(geen VRC)';
     data.forEach(r => {
@@ -1568,12 +1684,11 @@ function renderTable() {
       if (!groups.has(k)) groups.set(k, []);
       groups.get(k).push(r);
     });
-    // Sort groups: VRC codes alphabetically, geen VRC last
     const keys = Array.from(groups.keys()).sort((a,b) => {
       if (a === noVrcKey) return 1; if (b === noVrcKey) return -1;
       return a.localeCompare(b);
     });
-    const COL_COUNT = 26;
+    const COL_COUNT = 27;
     keys.forEach(k => {
       const grp = groups.get(k);
       const sumPlanned = grp.reduce((s,r)=>s+N(r.geplande_aantallen),0);

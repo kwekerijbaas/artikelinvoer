@@ -72,6 +72,43 @@ header .sub{opacity:.8;font-size:.8rem}
 .form-grid-6 .form-group.w4{grid-column-end:span 4}
 .form-grid-6 .form-group.w6{grid-column-end:span 6}
 .form-grid-6 .form-group.newrow{grid-column-start:1}
+/* 12-koloms variant — fijnere breedtes (1/6, 1/4, 1/3, 1/2 …) */
+.form-grid-12{grid-template-columns:repeat(12,1fr)}
+.form-grid-12 .form-group{grid-column-end:span 4}
+.form-grid-12 .form-group.w1{grid-column-end:span 1}
+.form-grid-12 .form-group.w2{grid-column-end:span 2}
+.form-grid-12 .form-group.w3{grid-column-end:span 3}
+.form-grid-12 .form-group.w4{grid-column-end:span 4}
+.form-grid-12 .form-group.w5{grid-column-end:span 5}
+.form-grid-12 .form-group.w6{grid-column-end:span 6}
+.form-grid-12 .form-group.w8{grid-column-end:span 8}
+.form-grid-12 .form-group.w12{grid-column-end:span 12}
+.form-grid-12 .form-group.newrow{grid-column-start:1}
+/* €-prefix voor prijsvelden */
+.num-eur{position:relative;display:flex;align-items:stretch}
+.num-eur .eur-pre{display:flex;align-items:center;justify-content:center;padding:0 8px;background:#f7f7f7;border:1px solid var(--border);border-right:none;border-radius:4px 0 0 4px;font-size:.85rem;color:#666;font-weight:600}
+.num-eur input{flex:1;border-radius:0 4px 4px 0 !important}
+/* ISO-weeknr-datepicker */
+.dp-input-wrap{position:relative}
+.dp-input-wrap input{padding-right:36px !important;cursor:pointer}
+.dp-input-wrap .dp-wk{position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:.68rem;color:#777;background:#f5f5f5;padding:1px 5px;border-radius:3px;pointer-events:none}
+.dp-pop{position:fixed;z-index:10000;background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:10px;min-width:300px;font-size:.78rem}
+.dp-pop.hidden{display:none}
+.dp-head{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:6px}
+.dp-head select{padding:2px 4px;font-size:.78rem;border:1px solid var(--border);border-radius:3px}
+.dp-head button{background:#eee;border:1px solid var(--border);border-radius:3px;cursor:pointer;width:24px;height:22px;line-height:1}
+.dp-head button:hover{background:#ddd}
+.dp-grid{display:grid;grid-template-columns:30px repeat(7,1fr);gap:2px}
+.dp-grid .dp-h{font-size:.66rem;color:#888;text-align:center;font-weight:700;padding:2px 0}
+.dp-grid .dp-wkn{font-size:.7rem;color:#888;text-align:center;padding:4px 0;background:#fafafa;border-radius:3px}
+.dp-grid .dp-d{padding:4px 0;text-align:center;cursor:pointer;border-radius:3px}
+.dp-grid .dp-d:hover{background:var(--groen-licht)}
+.dp-grid .dp-d.dp-other{color:#bbb}
+.dp-grid .dp-d.dp-today{outline:1px solid var(--groen)}
+.dp-grid .dp-d.dp-sel{background:var(--groen);color:#fff;font-weight:700}
+.dp-foot{margin-top:6px;display:flex;justify-content:space-between;font-size:.72rem;color:#777}
+.dp-foot button{background:transparent;border:none;color:var(--groen);cursor:pointer;font-size:.74rem;padding:2px 4px}
+.dp-foot button:hover{text-decoration:underline}
 .form-group label{font-size:.7rem;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.4px}
 .form-group select,.form-group input,.form-group textarea{
   padding:6px 8px;border:1px solid var(--border);border-radius:4px;
@@ -628,38 +665,38 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
   </div>
   <div class="drawer-body">
     <div class="subhead">Status, VRC &amp; Verkoper</div>
-    <div class="form-grid form-grid-6">
-      <div class="form-group w1">
+    <div class="form-grid form-grid-12">
+      <div class="form-group w3">
+        <label>Gepland?</label>
+        <label class="checkrow" style="margin-top:2px"><input id="d-gepland" type="checkbox"> Ja, ingepland</label>
+      </div>
+      <div class="form-group w3">
         <label>Status *</label>
         <select id="d-status"></select>
       </div>
       <div class="form-group w2">
-        <label>Verkoper</label>
-        <select id="d-verkoper"><option value=""></option></select>
+        <label>VRC</label>
+        <input id="d-vrc" type="text" list="dl-vrc" placeholder="VRC-…">
       </div>
-      <div class="form-group w2 newrow">
-        <label>VRC (Verkoopraamcontract)</label>
-        <input id="d-vrc" type="text" list="dl-vrc" placeholder="Kies of typ VRC-…">
-      </div>
-      <div class="form-group w2">
+      <div class="form-group w4">
         <label>VRC info / raamcontract toelichting</label>
         <input id="d-vrc_info" type="text">
       </div>
-      <div class="form-group w1">
-        <label>IOR (Inkooporder)</label>
-        <input id="d-ior" type="text" list="dl-ior" placeholder="Kies of typ IOR-…" oninput="toggleIorVelden()">
-      </div>
-      <div class="form-group w2" id="d-leverancier-wrap" style="display:none">
-        <label>Leverancier (kweker)</label>
-        <input id="d-leverancier" type="text" list="dl-leverancier" placeholder="Kweker waar je inkoopt…">
-      </div>
-      <div class="form-group w2" id="d-ior_info-wrap" style="display:none">
-        <label>IOR info / toelichting</label>
-        <input id="d-ior_info" type="text">
+      <div class="form-group w3 newrow">
+        <label>Verkoper</label>
+        <select id="d-verkoper"><option value=""></option></select>
       </div>
       <div class="form-group w2">
-        <label>Gepland?</label>
-        <select id="d-gepland"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+        <label>IOR (Inkooporder)</label>
+        <input id="d-ior" type="text" list="dl-ior" placeholder="IOR-…" oninput="toggleIorVelden()">
+      </div>
+      <div class="form-group w3" id="d-leverancier-wrap" style="display:none">
+        <label>Leverancier (kweker)</label>
+        <input id="d-leverancier" type="text" list="dl-leverancier" placeholder="Kweker…">
+      </div>
+      <div class="form-group w4" id="d-ior_info-wrap" style="display:none">
+        <label>IOR info / toelichting</label>
+        <input id="d-ior_info" type="text">
       </div>
     </div>
 
@@ -683,30 +720,30 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
     <div class="form-grid">
       <div class="form-group">
         <label>Jaar *</label>
-        <select id="d-jaar"><option value="">—</option></select>
+        <select id="d-jaar" onchange="onJaarOfWeekChange()"><option value="">—</option></select>
       </div>
       <div class="form-group">
         <label>Week *</label>
-        <select id="d-week"><option value="">—</option></select>
+        <select id="d-week" onchange="onJaarOfWeekChange()"><option value="">—</option></select>
       </div>
       <div class="form-group">
         <label>Verlaaddag</label>
-        <input id="d-verlaaddag" type="text" list="dl-verlaaddag" autocomplete="off">
+        <div class="dp-input-wrap"><input id="d-verlaaddag" type="text" class="dp-iso" autocomplete="off" placeholder="JJJJ-MM-DD" onclick="openDatePicker(this)" oninput="updateDpWk(this)"><span class="dp-wk" id="dp-wk-d-verlaaddag"></span></div>
       </div>
       <div class="form-group">
         <label>Losdag bij klant</label>
-        <input id="d-losdag" type="text">
+        <div class="dp-input-wrap"><input id="d-losdag" type="text" class="dp-iso" autocomplete="off" placeholder="JJJJ-MM-DD" onclick="openDatePicker(this)" oninput="updateDpWk(this)"><span class="dp-wk" id="dp-wk-d-losdag"></span></div>
       </div>
       <div class="form-group">
         <label>Actiedag klant</label>
-        <input id="d-actiedag" type="text">
+        <div class="dp-input-wrap"><input id="d-actiedag" type="text" class="dp-iso" autocomplete="off" placeholder="JJJJ-MM-DD" onclick="openDatePicker(this)" oninput="updateDpWk(this)"><span class="dp-wk" id="dp-wk-d-actiedag"></span></div>
       </div>
       <div class="form-group">
-        <label>Af tuin</label>
-        <input id="d-af_tuin" type="text">
+        <label>Af tuin / Ex works</label>
+        <label class="checkrow" style="margin-top:2px"><input id="d-af_tuin" type="checkbox"> Af tuin (DAP)</label>
       </div>
       <div class="form-group">
-        <label>Transport</label>
+        <label>Transportoptie</label>
         <select id="d-transport"><option value=""></option></select>
       </div>
       <div class="form-group">
@@ -719,7 +756,7 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
       </div>
       <div class="form-group">
         <label>Aantal kar bruto</label>
-        <input id="d-aantal_kar_bruto" type="number" step="0.01" min="0">
+        <input id="d-aantal_kar_bruto" type="number" step="0.5" min="0" title="Hele karren of halve karren (.5) toegestaan">
       </div>
     </div>
 
@@ -911,6 +948,10 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 <datalist id="dl-productgroep"></datalist>
 <datalist id="dl-bloeistadium"></datalist>
 <datalist id="dl-opzetstuk"></datalist>
+<datalist id="dl-kleur"></datalist>
+
+<!-- ISO-week-datepicker popover (één instantie, hergebruikt) -->
+<div class="dp-pop hidden" id="dp-pop"></div>
 <datalist id="dl-tray"></datalist>
 <datalist id="dl-sticker"></datalist>
 <datalist id="dl-etiket"></datalist>
@@ -948,7 +989,22 @@ function newId() { return 'r-' + (__idc++).toString(36) + '-' + Math.random().to
 /* === UTILITIES === */
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const N = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+const N = v => {
+  // accepteer NL-komma als decimaal-scheidingsteken; strip duizendtal-puntjes
+  if (typeof v === 'string') {
+    const s = v.trim().replace(/\s/g,'');
+    // als zowel "." als "," voorkomen: het laatste teken is de decimaal
+    if (s.indexOf(',') >= 0 && s.indexOf('.') >= 0) {
+      const lastC = s.lastIndexOf(','), lastD = s.lastIndexOf('.');
+      v = lastC > lastD ? s.replace(/\./g,'').replace(',','.') : s.replace(/,/g,'');
+    } else if (s.indexOf(',') >= 0) {
+      v = s.replace(',', '.');
+    } else {
+      v = s;
+    }
+  }
+  const n = Number(v); return Number.isFinite(n) ? n : 0;
+};
 function toast(msg) {
   const t = $('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2200);
@@ -1005,6 +1061,7 @@ function initLookups() {
   fillDatalist('dl-productgroep', DATA.productgroepen);
   fillDatalist('dl-bloeistadium', DATA.bloeistadia);
   fillDatalist('dl-opzetstuk', OPZETSTUKKEN);
+  fillDatalist('dl-kleur', KLEUREN);
 
   // (Agriware-artikelen datalists worden gevuld door refreshAgriwareDatalists na renderBedrukCards)
 
@@ -1714,14 +1771,15 @@ function duplicateRow(id) {
 // KAR-niveau velden. Artikel-velden (product, planning, aantallen, fust,
 // verpakking, prijs + artikel-bedrukking) staan per component in r.componenten[].
 const DRAWER_FIELDS = [
-  'status','vrc','vrc_info','ior','ior_info','leverancier','verkoper','gepland',
+  'status','vrc','vrc_info','ior','ior_info','leverancier','verkoper',
   'klant','eindklant','afzetland',
-  'jaar','week','verlaaddag','losdag','actiedag','af_tuin','transport',
+  'jaar','week','verlaaddag','losdag','actiedag','transport',
   'type_kar','aantal_lagen_kar','aantal_kar_bruto',
   'mix_type','details_klantmix','ladingdrager',
   'opmerking'
 ];
-const DRAWER_BOOLS = []; // bedrukkings-checkboxes worden afgehandeld door BEDRUKKING_OPTIES / readBedrukFromForm
+// gepland en af_tuin zijn checkboxes met Ja/Nee-mapping; bedrukking-checkboxes via BEDRUKKING_OPTIES.
+const DRAWER_BOOLS = [];
 const NUM_FIELDS = new Set(['jaar','week','aantal_lagen_kar','aantal_kar_bruto']);
 
 function openDrawer(id) {
@@ -1740,12 +1798,18 @@ function openDrawer(id) {
   DRAWER_BOOLS.forEach(f => {
     $('d-'+f).checked = r ? !!r[f] : false;
   });
+  // Gepland (checkbox; opgeslagen als 'Ja'/'Nee')
+  $('d-gepland').checked = !!(r && String(r.gepland).toLowerCase() === 'ja');
+  // Af tuin (checkbox; opgeslagen als 'ja'/'nee')
+  $('d-af_tuin').checked = !!(r && String(r.af_tuin).toLowerCase() === 'ja');
   if (!r) {
     $('d-status').value = 'V'; // default new = aanvraag
     // Default jaar = most recent year present (or current year)
     const years = Array.from(new Set(regels.map(x => N(x.jaar)).filter(y => y > 0))).sort();
     $('d-jaar').value = years.length ? years[years.length-1] : new Date().getFullYear();
   }
+  // Update weeknr-badges naast datumvelden
+  ['d-verlaaddag','d-losdag','d-actiedag'].forEach(id => updateDpWk($(id)));
 
   // Leverancier + IOR info zichtbaarheid synchroniseren met IOR-waarde
   toggleIorVelden();
@@ -1886,6 +1950,8 @@ const OPZETSTUKKEN = [
   '12gaats ijzer (DC)','12gaats ijzer (CC)','00gaats kunststof (DC)','00gaats kunststof (CC)',
   '00gaats hout (DC)','00gaats hout (CC)'
 ];
+// Kleuren — uit Agriware Lookup_Kleuren (NL-omschrijving als waarde, vrije tekst ook toegestaan)
+const KLEUREN = ["Rood","Warm Red","Wijnrood","Classic rood","Rood bot","Rood gerand","Rood gevlamd","Rode naalden","Lichtrood","Donkerrood","Bordeaux","Roodoranje","Passion Peach","Licht roodoranje","Donker roodoranje","Oranje","Licht Oranje","Bruin","Middenbruin","Brons","Koper","Antique","Marsala","Terracotta","Bruinrood","Terra","Oranjebruin","Lichtbruin","Donkerbruin","Chocolade","Oranjegeel","Mango","Licht oranjegeel","Donker oranjegeel","Geel","Geel bont","Geel gerand","Gele naalden","Zuiver geel","Geel + oog","Lichtgeel","Creme","Beige","Zand","Champagne","Donkergeel","Goud","Goud bont","Antiek goud","Geelgroen","Licht geelgroen","Anise","Donker geelgroen","Limegroen","Groen","Middengroen","Classic groen","Warm Lime","Lichtgroen","Mint","Lentegroen","Appelgroen","Donkergroen","Olijfgroen","Jade","Blauwgroen","Turquoise","Licht blauwgroen","Donker blauwgroen","Aquamarijn","Blauw","Middenblauw","100% Blauw","Geblauwd","Classic blauw","Lichtblauw","Babyblauw","Donkerblauw","Blauwpaars","Blauwviolet","Licht blauwpaars","Lavender","Donker blauwpaars","Paars","Paars gevlamd","Classic paars","Violet","Violetblauw","Lichtpaars","Milka","Donkerpaars","Dark purple","Aubergine","Classic donkerpaars","Paarszwart","Donker violet","Roodpaars","Fuchsia","Licht roodpaars","Donker roodpaars","Roze","Roze gevlamd","Lichtroze","Zalm","Donkerzalm","Zalmroze","Donkerroze","Dark pink","Raspberry","Old pink","Oudroze","Cerise","Lila","Lichtlila","Donkerlila","Wit","Ivoor","Wit gerand","Wit bont","Wit + oog","Grijs","Khaki","Grey Brown","Grijsbruin","Grijsgroen","Grijsblauw","Lichtgrijs","Taupe","Donkergrijs","Antraciet","Antraciet zilver metallic","Zilver","Platina","Zilver bont","Zwart","Donker getint","2-kleur rood","2-kleur lichtrood","2-kleur donkerrood","2-kleur oranjerood","2-kleur oranje","2-kleur lichtoranje","2-kleur bruin","2-kleur geeloranje","2-kleur licht oranjegeel","2-kleur donkeroranjegeel","2-kleur geel","2-kleur lichtgeel","2-kleur donkergeel","2-kleur geelgroen","2-kleur licht geelgroen","2-kleur donker geelgroen","2-kleur groen","2-kleur lichtgroen","2-kleur donkergroen","2-kleur blauwgroen","2-kleur licht blauwgroen","2-kleur donker blauwgroen","2-kleur blauw","2-kleur lichtblauw","2-kleur donkerblauw","2-kleur licht/donker blauw","2-kleur blauwpaars","2-kleur licht blauwpaars","2-kleur donker blauwpaars","2-kleur lavender","2-kleur paars","2-kleur paars - wit","2 kleur paars - geel","2-kleur paarsrood","2-kleur licht paarsrood","2-kleur donker paarsrood","2-kleur roze","2-kleur lichtroze","2-kleur donkerroze","2-kleur rozerood","2-kleur lila","2-kleur lichtlila","2-kleur donkerlila","2-kleur wit","2-kleur lichtgrijs","2-kleur donkergrijs","2-kleur zwart","2-kleur overig","3-kleur rood","3-kleur lichtrood","3-kleur donkerrood","3-kleur oranjerood","3-kleur oranje","3-kleur lichtoranje","3-kleur donkeroranje","3-kleur oranjegeel","3-kleur licht oranjegeel","3-kleur donkeroranjegeel","3-kleur geel","3-kleur lichtgeel","3-kleur donkergeel","3-kleur geelgroen","3-kleur licht geelgroen","3-kleur donker geelgroen","3-kleur groen","3-kleur lichtgroen","3-kleur donkergroen","3-kleur blauwgroen","3-kleur licht blauwgroen","3-kleur donker blauwgroen","3-kleur blauw","3-kleur lichtblauw","3-kleur donkerblauw","3-kleur blauwpaars","3-kleur licht blauwpaars","3-kleur donker blauwpaars","3-kleur paars","3-kleur lichtpaars","3-kleur donkerpaars","3-kleur paarsrood","3-kleur licht paarsrood","3-kleur donker paarsrood","3-kleur roze","3-kleur lichtroze","3-kleur donkerroze","3-kleur lila","3-kleur lichtlila","3-kleur donkerlila","3-kleur wit","3-kleur lichtgrijs","3-kleur donkergrijs","3-kleur zwart","3-kleur overig","4-kleurig","Onbedrukt","Bedrukt","Transparant","Samengesteld artikel","Gemengd","Karmixartikel"];
 
 // Bedrukking-splitsing: karposter + karsticker horen bij de KAR, de rest per ARTIKEL/component
 const KAR_BEDRUK_KEYS = new Set(['karposter','karsticker','opzetstuk','sealen_strappen']);
@@ -1947,9 +2013,18 @@ function syncBedrukCard(key) {
   if (!card) return;
   const cb = $('d-'+key);
   card.classList.toggle('actief', !!cb.checked);
-  // Quick meta-string with key values filled in
   const o = BEDRUKKING_OPTIES.find(x => x.key === key);
   if (!o) return;
+  // Bij aanvinken: Wie-velden standaard op 'Baas' als nog leeg
+  if (cb.checked) {
+    o.subFields.forEach(sf => {
+      if (sf.type !== 'wie') return;
+      if (sf.f !== 'wie_productie' && sf.f !== 'wie_produceert' && sf.f !== 'wie_betaald') return;
+      const el = $(bedrukSubFieldDomId(key, sf.f));
+      if (el && !el.value) el.value = 'Baas';
+    });
+  }
+  // Quick meta-string with key values filled in
   const parts = [];
   o.subFields.forEach(sf => {
     const v = ($(bedrukSubFieldDomId(key, sf.f)) || {}).value;
@@ -2003,6 +2078,169 @@ function calcCompPerKar(c) {
   return lagen * N(c.aantal_fust_laag) * N(c.aantal_per_fust);
 }
 
+/* === ISO-WEEK + DATEPICKER === */
+// ISO 8601: week 1 = de week die de eerste donderdag bevat.
+function isoWeekOf(d) {
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = x.getUTCDay() || 7;
+  x.setUTCDate(x.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(x.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((x - yearStart) / 86400000) + 1) / 7);
+  return { year: x.getUTCFullYear(), week };
+}
+// Maandag van ISO-week (year, week)
+function isoWeekMonday(year, week) {
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const dow = jan4.getUTCDay() || 7;
+  const week1Mon = new Date(Date.UTC(year, 0, 4 - (dow - 1)));
+  return new Date(week1Mon.getTime() + (week - 1) * 7 * 86400000);
+}
+function fmtYMD(d) {
+  if (!(d instanceof Date) || isNaN(d)) return '';
+  const m = String(d.getUTCMonth()+1).padStart(2,'0'), dd = String(d.getUTCDate()).padStart(2,'0');
+  return d.getUTCFullYear() + '-' + m + '-' + dd;
+}
+function parseYMD(s) {
+  s = String(s||'').trim();
+  if (!s) return null;
+  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!m) return null;
+  const d = new Date(Date.UTC(+m[1], +m[2]-1, +m[3]));
+  return isNaN(d) ? null : d;
+}
+// Update de weeknr-badge naast een datepicker-input
+function updateDpWk(input) {
+  if (!input) return;
+  const wk = $('dp-wk-' + input.id);
+  if (!wk) return;
+  const d = parseYMD(input.value);
+  if (!d) { wk.textContent = ''; return; }
+  const iw = isoWeekOf(d);
+  wk.textContent = 'w' + iw.week;
+}
+
+let dpState = { input: null, year: 0, month: 0 };
+function openDatePicker(input) {
+  if (!input) return;
+  const pop = $('dp-pop'); if (!pop) return;
+  dpState.input = input;
+  const d = parseYMD(input.value) || new Date();
+  dpState.year = d.getUTCFullYear();
+  dpState.month = d.getUTCMonth();
+  renderDatePicker();
+  // positioneren onder de input (position:fixed, dus viewport-coords)
+  pop.classList.remove('hidden');
+  const rect = input.getBoundingClientRect();
+  const popRect = pop.getBoundingClientRect();
+  let top = rect.bottom + 4;
+  let left = rect.left;
+  // schuif terug als het buiten het scherm zou vallen
+  if (left + popRect.width > window.innerWidth - 8) left = Math.max(8, window.innerWidth - popRect.width - 8);
+  if (top + popRect.height > window.innerHeight - 8) top = Math.max(8, rect.top - popRect.height - 4);
+  pop.style.top = top + 'px';
+  pop.style.left = left + 'px';
+  setTimeout(() => document.addEventListener('mousedown', dpOutsideClose, true), 0);
+}
+function closeDatePicker() {
+  $('dp-pop').classList.add('hidden');
+  document.removeEventListener('mousedown', dpOutsideClose, true);
+  dpState.input = null;
+}
+function dpOutsideClose(ev) {
+  const pop = $('dp-pop');
+  if (!pop) return;
+  if (pop.contains(ev.target)) return;
+  if (dpState.input && (ev.target === dpState.input || dpState.input.contains(ev.target))) return;
+  closeDatePicker();
+}
+function dpNav(dy, dm) {
+  let y = dpState.year, m = dpState.month + dm;
+  while (m < 0) { m += 12; y -= 1; }
+  while (m > 11) { m -= 12; y += 1; }
+  dpState.year = y + dy; dpState.month = m;
+  renderDatePicker();
+}
+function dpPickYM(y, m) { dpState.year = +y; dpState.month = +m; renderDatePicker(); }
+function dpPick(ymd) {
+  const inp = dpState.input;
+  if (inp) {
+    inp.value = ymd;
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+    updateDpWk(inp);
+  }
+  closeDatePicker();
+}
+function dpClear() {
+  const inp = dpState.input;
+  if (inp) {
+    inp.value = '';
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+    updateDpWk(inp);
+  }
+  closeDatePicker();
+}
+function dpToday() {
+  const t = new Date();
+  dpPick(fmtYMD(new Date(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()))));
+}
+function renderDatePicker() {
+  const pop = $('dp-pop'); if (!pop) return;
+  const y = dpState.year, m = dpState.month;
+  const monthNames = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+  const dayHeads = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
+  // Start vanaf maandag van de week waarin de 1e van de maand valt
+  const first = new Date(Date.UTC(y, m, 1));
+  const firstDow = first.getUTCDay() || 7;
+  const gridStart = new Date(first.getTime() - (firstDow - 1) * 86400000);
+  const todayYMD = fmtYMD(new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())));
+  const selYMD = dpState.input ? (dpState.input.value || '') : '';
+  // Bouw 6 weken (42 dagen)
+  let cells = '<div class="dp-h">wk</div>';
+  dayHeads.forEach(d => cells += '<div class="dp-h">'+d+'</div>');
+  for (let w = 0; w < 6; w++) {
+    const weekStart = new Date(gridStart.getTime() + w * 7 * 86400000);
+    const iw = isoWeekOf(weekStart);
+    cells += '<div class="dp-wkn" title="ISO-week">'+iw.week+'</div>';
+    for (let i = 0; i < 7; i++) {
+      const cell = new Date(weekStart.getTime() + i * 86400000);
+      const ymd = fmtYMD(cell);
+      const other = cell.getUTCMonth() !== m;
+      const isToday = ymd === todayYMD;
+      const isSel = ymd === selYMD;
+      cells += '<div class="dp-d'+(other?' dp-other':'')+(isToday?' dp-today':'')+(isSel?' dp-sel':'')+'" '
+        + 'onclick="dpPick(\''+ymd+'\')">'+cell.getUTCDate()+'</div>';
+    }
+  }
+  const yearOpts = [];
+  for (let yy = y - 5; yy <= y + 6; yy++) yearOpts.push('<option value="'+yy+'"'+(yy===y?' selected':'')+'>'+yy+'</option>');
+  const monthOpts = monthNames.map((n,i) => '<option value="'+i+'"'+(i===m?' selected':'')+'>'+n+'</option>').join('');
+  pop.innerHTML = '<div class="dp-head">'
+    + '<button type="button" onclick="dpNav(0,-1)" title="Vorige maand">‹</button>'
+    + '<select onchange="dpPickYM(dpState.year,this.value)">'+monthOpts+'</select>'
+    + '<select onchange="dpPickYM(this.value,dpState.month)">'+yearOpts.join('')+'</select>'
+    + '<button type="button" onclick="dpNav(0,1)" title="Volgende maand">›</button>'
+    + '</div>'
+    + '<div class="dp-grid">'+cells+'</div>'
+    + '<div class="dp-foot">'
+      + '<button type="button" onclick="dpToday()">Vandaag</button>'
+      + '<button type="button" onclick="dpClear()">Wissen</button>'
+    + '</div>';
+}
+
+// Wanneer week of jaar verandert: stel verlaaddag (indien leeg) in op de ISO-maandag.
+function onJaarOfWeekChange() {
+  const y = N(($('d-jaar')||{}).value);
+  const w = N(($('d-week')||{}).value);
+  if (!y || !w) return;
+  const vl = $('d-verlaaddag');
+  if (vl && !vl.value) {
+    vl.value = fmtYMD(isoWeekMonday(y, w));
+    updateDpWk(vl);
+  }
+}
+
 // Bij keuze van een ladingdrager: vul lagen/kar voor met de vaste lagen.
 function onTypeKarChange() {
   const ld = LADINGDRAGERS.find(l => l.code === ($('d-type_kar') || {}).value);
@@ -2024,30 +2262,34 @@ const COMP_VELDEN = [
   {f:'productgroep', label:'Productgroep', type:'datalist', dl:'dl-productgroep', grp:'product'},
   {f:'teelt', label:'Teelt', type:'datalist', dl:'dl-teelt', grp:'product'},
   {f:'potmaat', label:'Potmaat', type:'datalist', dl:'dl-potmaat', grp:'product'},
-  {f:'kleur', label:'Kleur', type:'text', grp:'product'},
+  {f:'kleur', label:'Kleur', type:'datalist', dl:'dl-kleur', grp:'product'},
   {f:'bloeistadium', label:'Bloeistadium', type:'datalist', dl:'dl-bloeistadium', grp:'product'},
   {f:'teeltspecificatie', label:'Teeltspecificatie', type:'datalist', dl:'dl-teeltspecificatie', grp:'product'},
   {f:'planningsgroep', label:'Planningsgroep', type:'datalist', dl:'dl-planningsgroep', grp:'product'},
-  {f:'geplande_aantallen', label:'Geplande aantallen', type:'num', grp:'aantal'},
-  {f:'afgenomen_totaal', label:'Afgenomen totaal', type:'num', grp:'aantal'},
   {f:'aantal_fust_laag', label:'Aantal fust/laag', type:'num', grp:'aantal'},
   {f:'aantal_per_fust', label:'Aantal/fust', type:'num', grp:'aantal'},
-  {f:'aantal_fust', label:'Aantal fust', type:'num', grp:'aantal'},
-  {f:'fust_incl_excl', label:'Fust incl/excl', type:'select', optsKey:'fust_incl_excl', grp:'aantal'},
-  {f:'prijs', label:'Prijs (€)', type:'num', grp:'verpakking'},
-  {f:'prijs_consument', label:'Prijs consument (€)', type:'num', grp:'verpakking'},
+  {f:'aantal_fust', label:'Aantal fust per kar', type:'num', grp:'aantal'},
+  {f:'fust_berekenen', label:'Fust berekenen?', type:'checkbox', checkLabel:'Ja, apart op order (Excl. prijs)', grp:'aantal'},
+  {f:'prijs', label:'Prijs', type:'num', euro:true, grp:'verpakking'},
+  {f:'prijs_consument', label:'Prijs consument', type:'num', euro:true, grp:'verpakking'},
   {f:'min_contract_pct', label:'Min. contract %', type:'num', grp:'verpakking'},
   {f:'type_verpakking', label:'Type verpakking', type:'select', optsList:'VERP_TYPES', grp:'verpakking'},
   {f:'verpakking_kleur', label:'Verpakking kleur', type:'select', optsList:'VERP_KLEUR', grp:'verpakking'},
   {f:'ean', label:'BAAS/KLANT EAN', type:'text', grp:'verpakking'},
-  {f:'plantenpaspoort', label:'Plantenpaspoort', type:'select', opts:['','Ja','Nee','N.v.t.'], grp:'verpakking'},
 ];
+// Component-bool-velden (checkbox-type) — eigen set zodat blankComponent() ze als false initialiseert
+const COMP_BOOL_VELDEN = new Set(COMP_VELDEN.filter(v => v.type === 'checkbox').map(v => v.f));
 const COMP_NUM_VELDEN = new Set(COMP_VELDEN.filter(v => v.type === 'num').map(v => v.f).concat(['aantal_per_kar']));
 const COMP_VELD_NAMEN = ['artikelnr','naam'].concat(COMP_VELDEN.map(v => v.f)).concat(['aantal_per_kar']);
 
 function blankComponent() {
   const c = {_expanded:true};
-  COMP_VELD_NAMEN.forEach(f => { c[f] = COMP_NUM_VELDEN.has(f) ? 0 : ''; });
+  COMP_VELD_NAMEN.forEach(f => {
+    if (COMP_NUM_VELDEN.has(f)) c[f] = 0;
+    else if (COMP_BOOL_VELDEN.has(f)) c[f] = false;
+    else c[f] = '';
+  });
+  c.bloeistadium = 'D'; // standaard stadium
   return c;
 }
 
@@ -2088,9 +2330,16 @@ function compSelectOpts(spec) {
 function compFieldHtml(c, i, spec) {
   const val = c[spec.f] != null ? c[spec.f] : '';
   let input;
-  if (spec.type === 'num') {
-    const step = spec.f.indexOf('prijs') >= 0 ? '0.01' : '1';
-    input = '<input type="number" step="'+step+'" min="0" value="'+esc(val===0?'':val)+'" '
+  if (spec.type === 'checkbox') {
+    input = '<label class="checkrow" style="margin-top:2px"><input type="checkbox"'+(val?' checked':'')
+      + ' onchange="updateCompField('+i+',\''+spec.f+'\',this.checked)"> '+esc(spec.checkLabel || 'Ja')+'</label>';
+  } else if (spec.type === 'num' && spec.euro) {
+    // €-veld: text-input zodat zowel . als , werkt — N() normaliseert bij opslaan
+    input = '<div class="num-eur"><span class="eur-pre">€</span>'
+      + '<input type="text" inputmode="decimal" value="'+esc(val===0?'':val)+'" placeholder="0,00" '
+      + 'oninput="updateCompField('+i+',\''+spec.f+'\',this.value)"></div>';
+  } else if (spec.type === 'num') {
+    input = '<input type="number" step="1" min="0" value="'+esc(val===0?'':val)+'" '
       + 'oninput="updateCompField('+i+',\''+spec.f+'\',this.value)">';
   } else if (spec.type === 'datalist') {
     input = '<input type="text" list="'+spec.dl+'" autocomplete="off" value="'+esc(val)+'" '
@@ -2189,12 +2438,30 @@ function renderComponentPanels() {
 function updateCompField(i, f, v) {
   const c = currentComponenten[i];
   if (!c) return;
-  if (typeof v === 'boolean') { c[f] = v; renderComponentPanels(); return; }
+  if (typeof v === 'boolean') {
+    c[f] = v;
+    // Bedrukking aanvinken? Zet Wie-defaults op Baas
+    if (v && ARTIKEL_BEDRUKKING.find(o => o.key === f)) applyWieDefaults(c, f);
+    renderComponentPanels();
+    return;
+  }
   if (COMP_NUM_VELDEN.has(f) || isBedrukNumField(f)) {
     c[f] = N(v);
   } else {
     c[f] = v;
   }
+}
+
+// Zet Wie-velden van een bedrukking-optie standaard op 'Baas' als ze nog leeg zijn.
+function applyWieDefaults(obj, key) {
+  const opt = (typeof BEDRUKKING_OPTIES !== 'undefined' ? BEDRUKKING_OPTIES : []).find(o => o.key === key);
+  if (!opt) return;
+  opt.subFields.forEach(sf => {
+    if (sf.type !== 'wie') return;
+    if (sf.f !== 'wie_productie' && sf.f !== 'wie_produceert' && sf.f !== 'wie_betaald') return;
+    const fid = key + '_' + sf.f;
+    if (!obj[fid]) obj[fid] = 'Baas';
+  });
 }
 
 function toggleCompExpand(i) {
@@ -2209,6 +2476,7 @@ function toggleCompBedruk(i, key, ev) {
   const c = currentComponenten[i];
   if (!c) return;
   c[key] = !c[key];
+  if (c[key]) applyWieDefaults(c, key);
   renderComponentPanels();
 }
 
@@ -2227,7 +2495,14 @@ function regelNaarComponenten(r) {
   if (!r) return [];
   // Nieuw formaat: regel heeft al componenten[]
   if (Array.isArray(r.componenten) && r.componenten.length) {
-    return r.componenten.map(c => Object.assign(blankComponent(), c, {_expanded: true}));
+    return r.componenten.map(c => {
+      const cc = Object.assign(blankComponent(), c, {_expanded: true});
+      // Migreer oud component-veld fust_incl_excl (string) → fust_berekenen (bool)
+      if (c.fust_incl_excl != null && (cc.fust_berekenen == null || cc.fust_berekenen === false)) {
+        cc.fust_berekenen = (String(c.fust_incl_excl).toLowerCase() === 'excl');
+      }
+      return cc;
+    });
   }
   // Oud mix-formaat: lichte mix_componenten[] — vul aan tot volledig component
   if (Array.isArray(r.mix_componenten) && r.mix_componenten.length) {
@@ -2244,6 +2519,8 @@ function regelNaarComponenten(r) {
     c.artikelnr = r.artikelnr || '';
     c.naam = r.naam || '';
     COMP_VELDEN.forEach(v => { if (r[v.f] != null && r[v.f] !== '') c[v.f] = r[v.f]; });
+    // Migreer oud regel-niveau fust_incl_excl → component fust_berekenen
+    if (r.fust_incl_excl) c.fust_berekenen = (String(r.fust_incl_excl).toLowerCase() === 'excl');
     c.aantal_per_kar = N(r.aantal_pl_kar) || 0;
     // Artikel-bedrukking van regel-niveau meenemen naar het component
     ARTIKEL_BEDRUKKING.forEach(o => {
@@ -2457,6 +2734,9 @@ function readForm() {
     r[f] = NUM_FIELDS.has(f) ? N(v) : v;
   });
   DRAWER_BOOLS.forEach(f => { r[f] = $('d-'+f).checked; });
+  // Gepland (checkbox) en Af tuin (checkbox) — als 'Ja'/'Nee' / 'ja'/'nee' opslaan voor back-compat
+  r.gepland = $('d-gepland').checked ? 'Ja' : 'Nee';
+  r.af_tuin = $('d-af_tuin').checked ? 'ja' : 'nee';
   // Bedrukkings-opties op KAR-niveau uitlezen (karposter + karsticker)
   readBedrukFromForm(r);
   r.karposter_ja_nee = r.karposter ? 'Ja' : 'Nee';
@@ -2474,15 +2754,15 @@ function applyComponentenCache(r) {
   const sum = (f) => comps.reduce((s,c) => s + N(c[f]), 0);
   // tekst-velden: eerste component (representatief voor weergave/export)
   ['artikelnr','naam','productgroep','teelt','potmaat','bloeistadium','teeltspecificatie',
-   'planningsgroep','fust_incl_excl','type_verpakking','verpakking_kleur','ean','plantenpaspoort']
+   'planningsgroep','type_verpakking','verpakking_kleur','ean']
     .forEach(f => { r[f] = c0[f] || ''; });
+  // fust_incl_excl: afgeleid van eerste component's fust_berekenen (back-compat voor export)
+  r.fust_incl_excl = c0.fust_berekenen ? 'Excl' : 'Incl';
   r.prijs_consument = N(c0.prijs_consument);
   r.min_contract_pct = N(c0.min_contract_pct);
   r.aantal_fust_laag = N(c0.aantal_fust_laag);
   r.aantal_per_fust = N(c0.aantal_per_fust);
   // som-velden
-  r.geplande_aantallen = sum('geplande_aantallen');
-  r.afgenomen_totaal = sum('afgenomen_totaal');
   r.aantal_fust = sum('aantal_fust');
   const compTotal = sum('aantal_per_kar');
   if (compTotal > 0) r.aantal_pl_kar = compTotal;

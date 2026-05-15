@@ -21,6 +21,8 @@ header h1{font-size:1.2rem;font-weight:600}
 header .sub{opacity:.8;font-size:.8rem}
 .header-stats{display:flex;gap:10px;font-size:.82rem;flex-wrap:wrap}
 .header-stats span{background:rgba(255,255,255,.15);padding:4px 12px;border-radius:12px;white-space:nowrap}
+.build-badge{margin-left:14px;font-size:.7rem;background:rgba(0,0,0,.25);color:#fff;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:ui-monospace,monospace;letter-spacing:.3px;border:1px solid rgba(255,255,255,.15)}
+.build-badge:hover{background:rgba(0,0,0,.45)}
 
 .container{max-width:100%;margin:14px auto;padding:0 14px}
 
@@ -468,6 +470,7 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
     <span id="stat-A">0 definitief</span>
     <span id="stat-X">0 vervallen</span>
   </div>
+  <div class="build-badge" id="build-badge" title="Klik om de PR/versie te kopiëren — gebruik dit bij het melden van een issue" onclick="copyBuildInfo()">__BUILD_INFO__</div>
 </header>
 
 <div class="container">
@@ -1026,6 +1029,23 @@ const N = v => {
 function toast(msg) {
   const t = $('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// Build-info badge: workflow vervangt __BUILD_INFO__ bij deploy. Lokaal = "dev"
+(function initBuildBadge(){
+  const el = document.getElementById('build-badge');
+  if (!el) return;
+  if (el.textContent.indexOf('__BUILD_INFO__') >= 0) el.textContent = 'dev (lokaal)';
+})();
+function copyBuildInfo() {
+  const el = document.getElementById('build-badge');
+  if (!el) return;
+  const txt = el.textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => toast('Versie gekopieerd: ' + txt), () => toast(txt));
+  } else {
+    toast(txt);
+  }
 }
 
 /* === DROPDOWNS / DATALISTS === */

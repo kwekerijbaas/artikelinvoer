@@ -932,6 +932,10 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
         <input id="sp-poll-interval" type="number" min="0" max="3600" step="5" style="width:90px" value="60">
       </div>
       <div class="form-group" style="grid-column:1/-1">
+        <label>Jouw naam of email <span style="color:#888;font-weight:400">(wordt opgeslagen in updated_by — traceerbaar wie wat heeft gewijzigd)</span></label>
+        <input id="sp-user-id" type="text" placeholder="bijv. hans@kwekerijbaas.nl of Hans Verkoper">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
         <label>Status</label>
         <div id="sp-status-text" style="font-size:.82rem;color:#555">—</div>
       </div>
@@ -1211,7 +1215,7 @@ function copyBuildInfo() {
    SharePoint Lists via een Power Automate webhook (HTTP-trigger). Zie de
    setup-guide in de SP-sync modal voor de inrichting.
 */
-let spSyncConfig = { webhookUrl:'', readWebhookUrl:'', enabled:false, pollIntervalSec:60, lastSyncAt:0, lastPullAt:0 };
+let spSyncConfig = { webhookUrl:'', readWebhookUrl:'', enabled:false, pollIntervalSec:60, userId:'', lastSyncAt:0, lastPullAt:0 };
 let spSyncQueue = []; // { kar, componenten, sent_at, source } — failed POSTs voor retry
 let spPollTimer = null;
 let spPullInFlight = false;
@@ -1511,6 +1515,7 @@ function openSpSyncModal() {
   document.getElementById('sp-read-webhook-url').value = spSyncConfig.readWebhookUrl || '';
   document.getElementById('sp-enabled').checked = !!spSyncConfig.enabled;
   document.getElementById('sp-poll-interval').value = N(spSyncConfig.pollIntervalSec) || 0;
+  document.getElementById('sp-user-id').value = spSyncConfig.userId || '';
   document.getElementById('sp-help-body').style.display = 'none';
   setSpSyncBadge();
   document.getElementById('sp-sync-modal').classList.add('show');
@@ -1526,6 +1531,7 @@ function saveSpSyncSettings() {
   spSyncConfig.readWebhookUrl = readUrl;
   spSyncConfig.enabled = en;
   spSyncConfig.pollIntervalSec = poll;
+  spSyncConfig.userId = document.getElementById('sp-user-id').value.trim();
   persistSpSync();
   setSpSyncBadge();
   startSpPollTimer();

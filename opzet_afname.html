@@ -906,140 +906,138 @@ select.cell-input{padding:2px 3px;cursor:pointer;text-align:left}
 <!-- Agriware lookup-lijsten import -->
 <!-- SharePoint-sync instellingen + setup-guide -->
 <div class="modal-bg" id="sp-sync-modal" onclick="if(event.target===this)closeSpSyncModal()">
-  <div class="modal" style="width:720px;max-height:90vh;overflow-y:auto">
+  <div class="modal" style="width:760px;max-height:90vh;overflow-y:auto">
     <h3>SharePoint-sync — instellingen</h3>
     <p style="font-size:.82rem;color:#555;margin-bottom:8px">
-      Schrijft elke opgeslagen kar (incl. componenten) automatisch weg naar twee
-      genormaliseerde SharePoint Lists via een Power Automate-flow. Lokaal blijft de
-      regel ook in de browser staan; bij netwerkfouten wordt de save in een wachtrij
-      gezet en automatisch opnieuw verzonden.
+      Schrijft elke opgeslagen kar automatisch weg naar twee genormaliseerde SharePoint-lists
+      via een Power Automate write-flow. Een tweede read-flow haalt regels op uit SharePoint
+      zodat verkoper, planner en inkoper elkaars wijzigingen kunnen zien (multi-user).
+      Lokaal blijft alles ook in de browser; bij netwerkfouten gaat de save in een wachtrij
+      en wordt automatisch hervat.
     </p>
-    <div class="form-grid" style="grid-template-columns:1fr">
-      <div class="form-group">
-        <label>Webhook-URL (uit Power Automate flow)</label>
-        <input id="sp-webhook-url" type="text" placeholder="https://prod-XX.westeurope.logic.azure.com:443/workflows/.../triggers/manual/paths/invoke?...">
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Write-webhook-URL <span style="color:#888;font-weight:400">(flow 1 — opslaan)</span></label>
+        <input id="sp-webhook-url" type="text" placeholder="https://prod-XX.westeurope.logic.azure.com:443/workflows/.../paths/invoke?...">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Read-webhook-URL <span style="color:#888;font-weight:400">(flow 2 — ophalen, voor multi-user)</span></label>
+        <input id="sp-read-webhook-url" type="text" placeholder="https://prod-XX.westeurope.logic.azure.com:443/workflows/.../paths/invoke?...">
       </div>
       <div class="form-group">
         <label class="checkrow"><input id="sp-enabled" type="checkbox"> Sync ingeschakeld</label>
       </div>
       <div class="form-group">
+        <label>Auto-ophalen elke (sec, 0=uit)</label>
+        <input id="sp-poll-interval" type="number" min="0" max="3600" step="5" style="width:90px" value="60">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
         <label>Status</label>
         <div id="sp-status-text" style="font-size:.82rem;color:#555">—</div>
       </div>
     </div>
-    <div class="btn-row" style="margin-top:8px">
+    <div class="btn-row" style="margin-top:8px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="saveSpSyncSettings()">Opslaan</button>
-      <button class="btn btn-secondary" onclick="testSpSync()">Test verbinding</button>
-      <button class="btn btn-secondary" onclick="flushSpQueue(true)">Wachtrij nu verzenden</button>
+      <button class="btn btn-secondary" onclick="testSpSync()">Test write</button>
+      <button class="btn btn-secondary" onclick="testSpRead()">Test read</button>
+      <button class="btn btn-secondary" onclick="pullFromSp(true)">Nu ophalen</button>
+      <button class="btn btn-secondary" onclick="flushSpQueue(true)">Wachtrij verzenden</button>
       <button class="btn btn-secondary" onclick="syncAllRegelsToSp()" title="Verzendt alle huidige regels naar SharePoint (eenmalig handig na inrichten)">Alles éénmalig wegschrijven</button>
       <button class="btn btn-secondary" onclick="closeSpSyncModal()">Sluiten</button>
     </div>
 
     <div class="sp-help" id="sp-help-toggle-wrap">
       <h4 onclick="document.getElementById('sp-help-body').style.display=document.getElementById('sp-help-body').style.display==='none'?'block':'none'" style="cursor:pointer">
-        ▾ Setup-guide: Power Automate flow + SharePoint Lists (klik om in/uit te klappen)
+        ▾ Setup-guide: SharePoint Lists + Power Automate flows (klik om in/uit te klappen)
       </h4>
       <div id="sp-help-body">
-        <h4>1. Maak twee SharePoint Lists aan</h4>
-        <p>Op de SharePoint-site die jullie gebruiken, maak twee Lists aan met deze kolommen (typen tussen haakjes):</p>
-        <p><strong>List "Karren"</strong></p>
-        <table><thead><tr><th>Kolomnaam</th><th>Type</th></tr></thead><tbody>
-          <tr><td>Title</td><td>Single line (gebruik = kar_id)</td></tr>
-          <tr><td>kar_id</td><td>Single line</td></tr>
-          <tr><td>status</td><td>Single line</td></tr>
-          <tr><td>vrc</td><td>Single line</td></tr>
-          <tr><td>vrc_info</td><td>Single line</td></tr>
-          <tr><td>klant</td><td>Single line</td></tr>
-          <tr><td>eindklant</td><td>Single line</td></tr>
-          <tr><td>afzetland</td><td>Single line</td></tr>
-          <tr><td>jaar</td><td>Number</td></tr>
-          <tr><td>week</td><td>Number</td></tr>
-          <tr><td>verlaaddag</td><td>Single line (YYYY-MM-DD)</td></tr>
-          <tr><td>losdag</td><td>Single line</td></tr>
-          <tr><td>actiedag</td><td>Single line</td></tr>
-          <tr><td>af_tuin</td><td>Single line (ja/nee)</td></tr>
-          <tr><td>transport</td><td>Single line</td></tr>
-          <tr><td>verkoper</td><td>Single line</td></tr>
-          <tr><td>gepland</td><td>Single line (Ja/Nee)</td></tr>
-          <tr><td>type_kar</td><td>Single line</td></tr>
-          <tr><td>aantal_lagen_kar</td><td>Number</td></tr>
-          <tr><td>aantal_kar_bruto</td><td>Number (decimal)</td></tr>
-          <tr><td>mix_type</td><td>Single line</td></tr>
-          <tr><td>details_klantmix</td><td>Multi line</td></tr>
-          <tr><td>karposter</td><td>Yes/No</td></tr>
-          <tr><td>karsticker</td><td>Yes/No</td></tr>
-          <tr><td>opzetstuk</td><td>Yes/No</td></tr>
-          <tr><td>sealen_strappen</td><td>Yes/No</td></tr>
-          <tr><td>opmerking</td><td>Multi line</td></tr>
-          <tr><td>updated_at</td><td>Single line (ISO datetime)</td></tr>
-          <tr><td>updated_by</td><td>Single line</td></tr>
-        </tbody></table>
-        <p><strong>List "KarComponenten"</strong></p>
-        <table><thead><tr><th>Kolomnaam</th><th>Type</th></tr></thead><tbody>
-          <tr><td>Title</td><td>Single line (gebruik = kar_id + "-" + comp_idx)</td></tr>
-          <tr><td>kar_id</td><td>Single line (FK naar Karren)</td></tr>
-          <tr><td>comp_idx</td><td>Number</td></tr>
-          <tr><td>artikelnr</td><td>Single line</td></tr>
-          <tr><td>naam</td><td>Single line</td></tr>
-          <tr><td>productgroep</td><td>Single line</td></tr>
-          <tr><td>teelt</td><td>Single line</td></tr>
-          <tr><td>potmaat</td><td>Single line</td></tr>
-          <tr><td>kleur</td><td>Single line</td></tr>
-          <tr><td>bloeistadium</td><td>Single line</td></tr>
-          <tr><td>teeltspecificatie</td><td>Single line</td></tr>
-          <tr><td>planningsgroep</td><td>Single line</td></tr>
-          <tr><td>aantal_per_kar</td><td>Number</td></tr>
-          <tr><td>aantal_fust_laag</td><td>Number</td></tr>
-          <tr><td>aantal_per_fust</td><td>Number</td></tr>
-          <tr><td>aantal_fust</td><td>Number</td></tr>
-          <tr><td>fust_berekenen</td><td>Yes/No</td></tr>
-          <tr><td>prijs</td><td>Number (decimal, 3 digits)</td></tr>
-          <tr><td>prijs_consument</td><td>Number (decimal)</td></tr>
-          <tr><td>type_verpakking</td><td>Single line</td></tr>
-          <tr><td>verpakking_kleur</td><td>Single line</td></tr>
-          <tr><td>ean</td><td>Single line</td></tr>
-          <tr><td>sticker</td><td>Yes/No</td></tr>
-          <tr><td>etiket</td><td>Yes/No</td></tr>
-          <tr><td>hoes</td><td>Yes/No</td></tr>
-          <tr><td>updated_at</td><td>Single line (ISO datetime)</td></tr>
-        </tbody></table>
+        <h4>1. SharePoint Lists</h4>
+        <p>Twee lists op de gedeelde SharePoint-site:</p>
+        <ul>
+          <li><code>Opzet_Afname</code> — één rij per kar</li>
+          <li><code>Opzet_Afname_Componenten</code> — één rij per component op een kar (FK = kar_id)</li>
+        </ul>
+        <p>Beide lists hebben naast de automatisch aangemaakte <code>Title</code> ook een eigen kolom <code>kar_id</code>. <strong>Beide kolommen moeten dezelfde waarde krijgen</strong> (de flow zet ze allebei op kar_id). Idem in <code>Opzet_Afname_Componenten</code>: Title = <code>kar_id + "-" + comp_idx</code>.</p>
 
-        <h4>2. Maak een Power Automate flow</h4>
+        <h4>2. Flow 1 — Write (opslaan vanuit app)</h4>
         <ol>
-          <li>Ga naar <code>flow.microsoft.com</code> → Create → Instant cloud flow → "Skip" → kies trigger <strong>"When a HTTP request is received"</strong>.</li>
-          <li>In de trigger: zet "Request Body JSON Schema" op het schema hieronder (klik "Use sample payload to generate schema" en plak het voorbeeld).</li>
-          <li>Voeg actie toe: <strong>"Apply to each"</strong> over <code>componenten</code>. Daarbinnen <strong>"Send an HTTP request to SharePoint"</strong> of <strong>"Get items"</strong> + <strong>"Update item / Create item"</strong> op List <code>KarComponenten</code> (zoek op kar_id + comp_idx, update als bestaat, anders create).</li>
-          <li>Buiten de loop: zelfde patroon op List <code>Karren</code> (zoek op kar_id, update of create).</li>
-          <li>Optioneel: actie <strong>"Response"</strong> met statuscode 200 en body <code>{ "ok": true }</code>.</li>
-          <li>Bewaar de flow → kopieer de "HTTP POST URL" uit de trigger → plak hierboven in "Webhook-URL".</li>
+          <li><code>flow.microsoft.com</code> → Create → Instant cloud flow → "Skip" → trigger <strong>"When a HTTP request is received"</strong>.</li>
+          <li>Trigger → "Use sample payload to generate schema" → plak het JSON-voorbeeld hieronder.</li>
+          <li>Voeg actie <strong>"Get items"</strong> toe op <code>Opzet_Afname</code> met filter <code>kar_id eq '@{triggerBody()?['kar']?['kar_id']}'</code>.</li>
+          <li>Voeg <strong>Condition</strong> toe: <code>length(outputs('Get_items')?['body/value']) is greater than 0</code>.
+            <ul>
+              <li><strong>If yes</strong>: actie <strong>"Update item"</strong> op het gevonden ID, vul alle kolommen uit <code>triggerBody()['kar']</code>. Zet ook <code>Title = kar_id</code>.</li>
+              <li><strong>If no</strong>: actie <strong>"Create item"</strong> in <code>Opzet_Afname</code>, vul alle kolommen + <code>Title = kar_id</code>.</li>
+            </ul>
+          </li>
+          <li>Voeg <strong>"Apply to each"</strong> toe over <code>triggerBody()['componenten']</code>:
+            <ul>
+              <li>Daarbinnen "Get items" op <code>Opzet_Afname_Componenten</code> met filter <code>kar_id eq '...' and comp_idx eq ...</code>.</li>
+              <li>Condition idem → Update of Create. Zet <code>Title = concat(kar_id, '-', comp_idx)</code>.</li>
+            </ul>
+          </li>
+          <li><strong>Optioneel maar aanbevolen</strong>: actie <strong>"Delete item"</strong>-stap met <em>"Get items"</em> op componenten waar <code>kar_id eq '...' and comp_idx ge length(componenten)</code> → loop → delete. Zo wordt een component die de gebruiker verwijdert ook in SP weggegooid.</li>
+          <li><strong>Response-actie</strong> (laatste stap): statuscode <code>200</code>, body <code>{"ok": true}</code>, en — heel belangrijk — deze <strong>headers</strong> (zonder CORS faalt de browser-fetch):
+            <pre style="background:#fff;border:1px solid #ddd;padding:6px;border-radius:4px;font-size:.7rem;margin:4px 0">Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type</pre>
+            (vervang <code>*</code> door <code>https://kwekerijbaas.github.io</code> als je strikter wilt zijn)
+          </li>
+          <li>Bewaar → kopieer de "HTTP POST URL" uit de trigger → plak hierboven in "Write-webhook-URL".</li>
         </ol>
-        <p><strong>JSON-payload sample (gebruik bij "Use sample payload to generate schema"):</strong></p>
+
+        <p><strong>JSON-payload sample (voor schema-detectie van flow 1):</strong></p>
         <pre style="background:#fff;border:1px solid #ddd;padding:8px;border-radius:4px;font-size:.7rem;overflow-x:auto;max-height:160px">{
   "kar": {
     "kar_id":"abc123","status":"V","vrc":"VRC-02666","klant":"Aldi","eindklant":"Aldi DE",
     "afzetland":"DUITSLAND","jaar":2026,"week":30,"verlaaddag":"2026-07-20","losdag":"",
     "actiedag":"","af_tuin":"ja","transport":"","verkoper":"Hans","gepland":"Ja",
     "type_kar":"DC","aantal_lagen_kar":4,"aantal_kar_bruto":12,"mix_type":"",
-    "details_klantmix":"","karposter":true,"karsticker":false,"opzetstuk":false,
-    "sealen_strappen":false,"opmerking":"","updated_at":"2026-05-15T10:00:00Z","updated_by":"hans@kwekerijbaas.nl"
+    "details_klantmix":"","ladingdrager":"","karposter":true,"karsticker":false,
+    "opzetstuk":false,"sealen_strappen":false,"opmerking":"",
+    "updated_at":"2026-05-15T10:00:00Z"
   },
   "componenten":[
     {"kar_id":"abc123","comp_idx":0,"artikelnr":"21900401","naam":"Bolchrysant Trio rood",
      "productgroep":"Bolchrysant","teelt":"Trio","potmaat":"219 pot Ø19 cm","kleur":"Rood",
      "bloeistadium":"D","teeltspecificatie":"Trio","planningsgroep":"219004",
      "aantal_per_kar":72,"aantal_fust_laag":18,"aantal_per_fust":1,"aantal_fust":18,
-     "fust_berekenen":false,"prijs":1.25,"prijs_consument":4.99,"type_verpakking":"",
+     "fust_berekenen":false,"prijs":1.250,"prijs_consument":4.99,"type_verpakking":"",
      "verpakking_kleur":"","ean":"","sticker":true,"etiket":false,"hoes":true,
      "updated_at":"2026-05-15T10:00:00Z"}
   ],
   "sent_at":"2026-05-15T10:00:00Z","source":"opzet_afname_app"
 }</pre>
 
-        <h4>3. Plak de URL hierboven en zet "Sync ingeschakeld" aan</h4>
-        <p>Klik daarna op "Test verbinding" om te checken dat de flow reageert. Vanaf dat moment wordt elke kar die je opslaat automatisch naar SharePoint geschreven.</p>
+        <h4>3. Flow 2 — Read (multi-user ophalen)</h4>
+        <ol>
+          <li>Nieuwe flow → trigger <strong>"When a HTTP request is received"</strong> (geen schema nodig — de app post een leeg of klein JSON-body).</li>
+          <li>Actie <strong>"Get items"</strong> op <code>Opzet_Afname</code> (zet "Top Count" hoog, bv. 5000).</li>
+          <li>Actie <strong>"Get items"</strong> op <code>Opzet_Afname_Componenten</code> (zelfde Top Count).</li>
+          <li>Actie <strong>"Select"</strong> op het eerste resultaat — map naar de schone payload-kolommen (kar_id, status, vrc, …, updated_at). Dit voorkomt dat alle SP-systeemvelden meekomen.</li>
+          <li>Actie <strong>"Select"</strong> op het tweede resultaat — idem voor componenten (kar_id, comp_idx, artikelnr, …).</li>
+          <li>Actie <strong>"Response"</strong>:
+            <ul>
+              <li>Status: <code>200</code></li>
+              <li>Body: <pre style="background:#fff;border:1px solid #ddd;padding:6px;border-radius:4px;font-size:.7rem;margin:4px 0">{
+  "karren": @{body('Select_karren')},
+  "componenten": @{body('Select_componenten')},
+  "fetched_at": "@{utcNow()}"
+}</pre></li>
+              <li>Headers: <strong>zelfde CORS-headers als bij flow 1</strong> + <code>Content-Type: application/json</code></li>
+            </ul>
+          </li>
+          <li>Bewaar → kopieer de HTTP POST URL → plak hierboven in "Read-webhook-URL".</li>
+        </ol>
 
-        <h4>4. PowerBI</h4>
-        <p>In PowerBI: "Get data" → "SharePoint Online List" → URL van de site → kies <code>Karren</code> en <code>KarComponenten</code> → relateer op <code>kar_id</code>.</p>
+        <h4>4. Inschakelen</h4>
+        <p>Vink "Sync ingeschakeld" aan → klik "Test write" en "Test read". Zet "Auto-ophalen" op <code>60</code> sec (default) — verkoper slaat op → 60 sec later ziet de planner het. Klik "Nu ophalen" om direct te synchroniseren.</p>
+
+        <h4>5. Conflict-strategie</h4>
+        <p>Last-write-wins op basis van <code>updated_at</code>: bij elke pull vergelijkt de app de remote <code>updated_at</code> met de lokale. Is remote nieuwer → lokaal wordt vervangen. Een regel die je op dat moment in de drawer aan het bewerken bent wordt nooit overschreven (de pull slaat 'm over en pakt 'm bij de volgende cyclus, na save of close).</p>
+
+        <h4>6. PowerBI</h4>
+        <p>"Get data" → "SharePoint Online List" → site-URL → kies beide lists → relateer op <code>kar_id</code>.</p>
       </div>
     </div>
   </div>
@@ -1213,8 +1211,10 @@ function copyBuildInfo() {
    SharePoint Lists via een Power Automate webhook (HTTP-trigger). Zie de
    setup-guide in de SP-sync modal voor de inrichting.
 */
-let spSyncConfig = { webhookUrl:'', enabled:false, lastSyncAt:0 };
+let spSyncConfig = { webhookUrl:'', readWebhookUrl:'', enabled:false, pollIntervalSec:60, lastSyncAt:0, lastPullAt:0 };
 let spSyncQueue = []; // { kar, componenten, sent_at, source } — failed POSTs voor retry
+let spPollTimer = null;
+let spPullInFlight = false;
 
 function loadSpSyncConfig() {
   try {
@@ -1241,15 +1241,15 @@ function setSpSyncBadge(state, msg) {
   } else if (state === 'busy') { el.classList.add('busy'); label = '🔵 Sync…'; }
   else if (state === 'error') { el.classList.add('error'); label = '🔴 Sync fout' + (spSyncQueue.length ? ' ('+spSyncQueue.length+')' : ''); }
   else if (spSyncQueue.length > 0) { el.classList.add('queued'); label = '🟡 Wachtrij ('+spSyncQueue.length+')'; }
-  else if (state === 'ok' || spSyncConfig.lastSyncAt) { el.classList.add('ok'); label = '🟢 Sync OK'; }
+  else if (state === 'ok' || spSyncConfig.lastSyncAt || spSyncConfig.lastPullAt) { el.classList.add('ok'); label = '🟢 Sync OK'; }
   el.textContent = label;
   el.title = msg ? (label + ' — ' + msg) : (label + ' — klik voor instellingen');
-  // Status-tekst in modal indien geopend
   const st = document.getElementById('sp-status-text');
   if (st) {
     const parts = [];
     parts.push(spSyncConfig.enabled ? 'Ingeschakeld' : 'Uitgeschakeld');
-    if (spSyncConfig.lastSyncAt) parts.push('Laatste sync: ' + new Date(spSyncConfig.lastSyncAt).toLocaleString('nl-NL'));
+    if (spSyncConfig.lastSyncAt) parts.push('Laatste write: ' + new Date(spSyncConfig.lastSyncAt).toLocaleString('nl-NL'));
+    if (spSyncConfig.lastPullAt) parts.push('Laatste read: ' + new Date(spSyncConfig.lastPullAt).toLocaleString('nl-NL'));
     if (spSyncQueue.length) parts.push('Wachtrij: ' + spSyncQueue.length + ' regels');
     if (msg) parts.push(msg);
     st.textContent = parts.join(' · ');
@@ -1375,9 +1375,142 @@ async function syncAllRegelsToSp() {
   toast('Bulk-sync klaar: '+okCount+' OK, '+errCount+' fout (in wachtrij)');
 }
 
+/* === READ-SYNC === */
+
+// Zet een SP-item (uit Get items via Select) terug om naar een regel-object.
+// Velden zijn al schoon (door Select in flow). karren-item levert kar-properties,
+// componenten worden apart aan de regel gehangen op basis van kar_id.
+function spItemToRegel(spKar, comps) {
+  const r = {
+    id: spKar.kar_id || newId(),
+    status: spKar.status||'V',
+    vrc: spKar.vrc||'',
+    vrc_info: spKar.vrc_info||'',
+    klant: spKar.klant||'',
+    eindklant: spKar.eindklant||'',
+    afzetland: spKar.afzetland||'',
+    jaar: spKar.jaar!=null ? N(spKar.jaar) : '',
+    week: spKar.week!=null ? N(spKar.week) : '',
+    verlaaddag: spKar.verlaaddag ? String(spKar.verlaaddag).slice(0,10) : '',
+    losdag: spKar.losdag ? String(spKar.losdag).slice(0,10) : '',
+    actiedag: spKar.actiedag ? String(spKar.actiedag).slice(0,10) : '',
+    af_tuin: spKar.af_tuin||'',
+    transport: spKar.transport||'',
+    verkoper: spKar.verkoper||'',
+    gepland: spKar.gepland||'',
+    type_kar: spKar.type_kar||'',
+    aantal_lagen_kar: spKar.aantal_lagen_kar!=null ? N(spKar.aantal_lagen_kar) : '',
+    aantal_kar_bruto: spKar.aantal_kar_bruto!=null ? N(spKar.aantal_kar_bruto) : '',
+    mix_type: spKar.mix_type||'',
+    details_klantmix: spKar.details_klantmix||'',
+    ladingdrager: spKar.ladingdrager||'',
+    karposter: !!spKar.karposter,
+    karsticker: !!spKar.karsticker,
+    opzetstuk: !!spKar.opzetstuk,
+    sealen_strappen: !!spKar.sealen_strappen,
+    opmerking: spKar.opmerking||'',
+    updated_at: spKar.updated_at||'',
+    componenten: (comps||[]).map(c => ({
+      artikelnr: c.artikelnr||'', naam: c.naam||'',
+      productgroep: c.productgroep||'', teelt: c.teelt||'', potmaat: c.potmaat||'',
+      kleur: c.kleur||'', bloeistadium: c.bloeistadium||'',
+      teeltspecificatie: c.teeltspecificatie||'', planningsgroep: c.planningsgroep||'',
+      aantal_per_kar: c.aantal_per_kar!=null ? N(c.aantal_per_kar) : '',
+      aantal_fust_laag: c.aantal_fust_laag!=null ? N(c.aantal_fust_laag) : '',
+      aantal_per_fust: c.aantal_per_fust!=null ? N(c.aantal_per_fust) : '',
+      aantal_fust: c.aantal_fust!=null ? N(c.aantal_fust) : '',
+      fust_berekenen: !!c.fust_berekenen,
+      prijs: c.prijs!=null ? N(c.prijs) : '',
+      prijs_consument: c.prijs_consument!=null ? N(c.prijs_consument) : '',
+      type_verpakking: c.type_verpakking||'',
+      verpakking_kleur: c.verpakking_kleur||'',
+      ean: c.ean||'',
+      sticker: !!c.sticker, etiket: !!c.etiket, hoes: !!c.hoes
+    }))
+  };
+  return r;
+}
+
+function mergeRemoteIntoLocal(payload) {
+  const karren = payload && payload.karren || [];
+  const componenten = payload && payload.componenten || [];
+  // Groepeer componenten op kar_id, sorteer op comp_idx
+  const compsByKar = {};
+  for (const c of componenten) {
+    const k = c.kar_id; if (!k) continue;
+    (compsByKar[k] = compsByKar[k] || []).push(c);
+  }
+  for (const k in compsByKar) compsByKar[k].sort((a,b) => N(a.comp_idx) - N(b.comp_idx));
+
+  let added = 0, updated = 0, skipped = 0, locked = 0;
+  for (const spKar of karren) {
+    const id = spKar.kar_id;
+    if (!id || id === '__test__') continue;
+    const localIdx = regels.findIndex(r => r.id === id);
+    const local = localIdx >= 0 ? regels[localIdx] : null;
+
+    // Bescherming: regel die nu in de drawer wordt bewerkt nooit overschrijven
+    if (local && editingId === id) { locked++; continue; }
+
+    const remoteTs = spKar.updated_at ? Date.parse(spKar.updated_at) : 0;
+    const localTs = local && local.updated_at ? Date.parse(local.updated_at) : 0;
+
+    // Als lokaal nog niet bestaat OF remote nieuwer is → vervangen
+    if (!local) {
+      regels.push(spItemToRegel(spKar, compsByKar[id]||[]));
+      added++;
+    } else if (remoteTs > localTs) {
+      regels[localIdx] = spItemToRegel(spKar, compsByKar[id]||[]);
+      updated++;
+    } else {
+      skipped++;
+    }
+  }
+  if (added || updated) renderTable();
+  return { added, updated, skipped, locked, total: karren.length };
+}
+
+async function pullFromSp(showToast) {
+  if (!spSyncConfig.enabled || !spSyncConfig.readWebhookUrl) {
+    if (showToast) toast('Read-webhook niet ingesteld of sync staat uit');
+    return;
+  }
+  if (spPullInFlight) { if (showToast) toast('Ophalen loopt al…'); return; }
+  spPullInFlight = true;
+  setSpSyncBadge('busy');
+  try {
+    const res = await fetch(spSyncConfig.readWebhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source:'opzet_afname_app', requested_at:new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const stats = mergeRemoteIntoLocal(data);
+    spSyncConfig.lastPullAt = Date.now();
+    persistSpSync();
+    setSpSyncBadge('ok');
+    if (showToast) toast('Opgehaald — ' + stats.added + ' nieuw, ' + stats.updated + ' bijgewerkt, ' + stats.skipped + ' ongewijzigd' + (stats.locked ? ', ' + stats.locked + ' overgeslagen (in bewerking)' : ''));
+  } catch (e) {
+    setSpSyncBadge('error', e.message);
+    if (showToast) toast('Ophalen mislukt: ' + e.message);
+  } finally {
+    spPullInFlight = false;
+  }
+}
+
+function startSpPollTimer() {
+  if (spPollTimer) { clearInterval(spPollTimer); spPollTimer = null; }
+  const sec = N(spSyncConfig.pollIntervalSec);
+  if (!spSyncConfig.enabled || !spSyncConfig.readWebhookUrl || sec <= 0) return;
+  spPollTimer = setInterval(() => { pullFromSp(false); }, sec * 1000);
+}
+
 function openSpSyncModal() {
   document.getElementById('sp-webhook-url').value = spSyncConfig.webhookUrl || '';
+  document.getElementById('sp-read-webhook-url').value = spSyncConfig.readWebhookUrl || '';
   document.getElementById('sp-enabled').checked = !!spSyncConfig.enabled;
+  document.getElementById('sp-poll-interval').value = N(spSyncConfig.pollIntervalSec) || 0;
   document.getElementById('sp-help-body').style.display = 'none';
   setSpSyncBadge();
   document.getElementById('sp-sync-modal').classList.add('show');
@@ -1385,17 +1518,22 @@ function openSpSyncModal() {
 function closeSpSyncModal() { document.getElementById('sp-sync-modal').classList.remove('show'); }
 function saveSpSyncSettings() {
   const url = document.getElementById('sp-webhook-url').value.trim();
+  const readUrl = document.getElementById('sp-read-webhook-url').value.trim();
   const en = document.getElementById('sp-enabled').checked;
-  if (en && !url) { toast('Vul eerst de webhook-URL in'); return; }
+  const poll = Math.max(0, Math.min(3600, N(document.getElementById('sp-poll-interval').value) || 0));
+  if (en && !url) { toast('Vul eerst de write-webhook-URL in'); return; }
   spSyncConfig.webhookUrl = url;
+  spSyncConfig.readWebhookUrl = readUrl;
   spSyncConfig.enabled = en;
+  spSyncConfig.pollIntervalSec = poll;
   persistSpSync();
   setSpSyncBadge();
-  toast('Sync-instellingen opgeslagen');
+  startSpPollTimer();
+  toast('Sync-instellingen opgeslagen' + (en && readUrl && poll>0 ? ' · auto-ophalen elke '+poll+'s' : ''));
 }
 async function testSpSync() {
   const url = document.getElementById('sp-webhook-url').value.trim();
-  if (!url) { toast('Vul eerst de webhook-URL in'); return; }
+  if (!url) { toast('Vul eerst de write-webhook-URL in'); return; }
   setSpSyncBadge('busy');
   try {
     const res = await fetch(url, {
@@ -1404,16 +1542,37 @@ async function testSpSync() {
       body: JSON.stringify({ kar:{kar_id:'__test__',klant:'TEST',jaar:2026,week:1,updated_at:new Date().toISOString()}, componenten:[], sent_at:new Date().toISOString(), source:'opzet_afname_app_test' })
     });
     if (!res.ok) throw new Error('HTTP '+res.status);
-    setSpSyncBadge('ok','test OK');
-    toast('Verbinding OK (HTTP '+res.status+')');
+    setSpSyncBadge('ok','write test OK');
+    toast('Write OK (HTTP '+res.status+')');
   } catch (e) {
     setSpSyncBadge('error', e.message);
-    toast('Test mislukt: '+e.message);
+    toast('Write-test mislukt: '+e.message);
+  }
+}
+async function testSpRead() {
+  const url = document.getElementById('sp-read-webhook-url').value.trim();
+  if (!url) { toast('Vul eerst de read-webhook-URL in'); return; }
+  setSpSyncBadge('busy');
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source:'opzet_afname_app_test', requested_at:new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const nK = (data && data.karren && data.karren.length) || 0;
+    const nC = (data && data.componenten && data.componenten.length) || 0;
+    setSpSyncBadge('ok','read test OK');
+    toast('Read OK — '+nK+' karren, '+nC+' componenten beschikbaar');
+  } catch (e) {
+    setSpSyncBadge('error', e.message);
+    toast('Read-test mislukt: '+e.message);
   }
 }
 
-// initialiseer status-badge bij start
-setTimeout(setSpSyncBadge, 100);
+// initialiseer status-badge + poll timer bij start
+setTimeout(() => { setSpSyncBadge(); startSpPollTimer(); }, 100);
 
 /* === DROPDOWNS / DATALISTS === */
 function fillSelect(id, items, fn) {
@@ -3281,6 +3440,8 @@ function saveOrder() {
   if (!r.week) { toast('Week is verplicht'); $('d-week').focus(); return; }
   if (!r.status) r.status = 'V';
 
+  // Stempel updated_at zodat merge-logica deze save als nieuwste herkent
+  r.updated_at = new Date().toISOString();
   let savedRegel;
   if (editingId) {
     const i = regels.findIndex(x => x.id === editingId);

@@ -1300,7 +1300,7 @@ function buildSpPayload(r) {
 async function postSpPayload(payload) {
   const res = await fetch(spSyncConfig.webhookUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload),
     // Power Automate webhooks staan no-cors niet toe; flow returnt CORS headers via Response actie.
   });
@@ -1485,7 +1485,7 @@ async function pullFromSp(showToast) {
   try {
     const res = await fetch(spSyncConfig.readWebhookUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ source:'opzet_afname_app', requested_at:new Date().toISOString() })
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -1544,7 +1544,7 @@ async function testSpSync() {
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ kar:{kar_id:'__test__',klant:'TEST',jaar:2026,week:1,updated_at:new Date().toISOString()}, componenten:[], sent_at:new Date().toISOString(), source:'opzet_afname_app_test' })
     });
     if (!res.ok) throw new Error('HTTP '+res.status);
@@ -1562,7 +1562,7 @@ async function testSpRead() {
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ source:'opzet_afname_app_test', requested_at:new Date().toISOString() })
     });
     if (!res.ok) throw new Error('HTTP '+res.status);

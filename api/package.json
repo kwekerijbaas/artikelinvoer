@@ -1,0 +1,12 @@
+{
+  "name": "opzet-afname-api",
+  "version": "1.0.0",
+  "description": "SharePoint-sync backend for opzet/afname app",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "undici": "^6.21.0"
+  }
+}

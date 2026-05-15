@@ -1,3 +1,10 @@
 .DS_Store
 Thumbs.db
 *.bak
+
+# Azure Functions
+api/node_modules/
+api/local.settings.json
+api/.python_packages/
+api/bin/
+api/obj/

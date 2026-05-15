@@ -118,10 +118,92 @@ Bij eerste gebruik (of na het toevoegen van extra API-permissies) moet een Azure
 
 **Verifiëren**: open een incognito-tab op `https://opzetafname.kwekerijbaas.nl`, log in als niet-admin testgebruiker — de consent-prompt moet weg zijn en de gebruiker landt direct op `opzet_afname.html`.
 
+### Backend setup (eenmalig) — SharePoint-sync via Azure Functions
+
+De app schrijft elke kar via `/api/karren/save` (managed Function in dezelfde SWA) naar twee SharePoint Lists, en leest via `/api/karren/list` terug voor multi-user. Authenticatie loopt via SWA's ingebouwde Entra-ID; identiteit wordt server-side gestempeld in `updated_by` — geen handmatige naam/email-invoer.
+
+**Vooraf**: zorg dat de twee SharePoint Lists `Opzet_Afname` en `Opzet_Afname_Componenten` op de gedeelde site bestaan (zelfde structuur als in de oude Power Automate setup). Beide lists hebben naast `Title` een eigen kolom `kar_id`. Componenten-list heeft daarnaast `comp_idx`.
+
+**Eénmalige setup in Cloud Shell** (`https://shell.azure.com` → Bash):
+
+```bash
+# === variabelen ===
+RG="rg-opzet-afname-754-msw-prd"
+SWA="swa-opzet-afname-754-msw-prd"
+TENANT_ID="5026748d-0958-4629-a93b-b72015d1aa7f"
+APP_DISPLAY_NAME="opzet-afname-sp-sync"
+SP_SITE_HOST="<jouw-tenant>.sharepoint.com"     # bv. kwekerijbaas.sharepoint.com
+SP_SITE_PATH="/sites/<sitenaam>"                # bv. /sites/Kwekerij
+LIST_KARREN="Opzet_Afname"
+LIST_COMPONENTEN="Opzet_Afname_Componenten"
+
+# === 1. App Registration met client secret ===
+APP_JSON=$(az ad app create --display-name "$APP_DISPLAY_NAME" --sign-in-audience AzureADMyOrg)
+APP_ID=$(echo "$APP_JSON" | jq -r '.appId')
+az ad sp create --id "$APP_ID" >/dev/null
+SECRET_JSON=$(az ad app credential reset --id "$APP_ID" --display-name "swa-functions" --years 2)
+CLIENT_SECRET=$(echo "$SECRET_JSON" | jq -r '.password')
+
+# === 2. Graph application-permission: Sites.Selected (least privilege) ===
+# Permission ID is constant binnen Microsoft Graph (00000003-0000-0000-c000-000000000000)
+GRAPH_APP="00000003-0000-0000-c000-000000000000"
+SITES_SELECTED_ROLE_ID="883ea226-0bf2-4a8f-9f9d-92c9162a727d"  # Sites.Selected (Application)
+az ad app permission add --id "$APP_ID" \
+  --api "$GRAPH_APP" \
+  --api-permissions "${SITES_SELECTED_ROLE_ID}=Role"
+az ad app permission admin-consent --id "$APP_ID"
+
+# === 3. SP-site GUIDs ophalen + grant op de site (admin consent required) ===
+SITE_RESP=$(az rest --method GET \
+  --uri "https://graph.microsoft.com/v1.0/sites/${SP_SITE_HOST}:${SP_SITE_PATH}")
+SITE_ID=$(echo "$SITE_RESP" | jq -r '.id')
+echo "SITE_ID: $SITE_ID"
+
+# Grant deze app write-toegang op specifiek deze site (Sites.Selected vereist explicit grant)
+az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/sites/${SITE_ID}/permissions" \
+  --headers "Content-Type=application/json" \
+  --body "{\"roles\":[\"write\"],\"grantedToIdentities\":[{\"application\":{\"id\":\"${APP_ID}\",\"displayName\":\"${APP_DISPLAY_NAME}\"}}]}"
+
+# === 4. List-IDs ophalen ===
+LIST_KARREN_ID=$(az rest --method GET \
+  --uri "https://graph.microsoft.com/v1.0/sites/${SITE_ID}/lists?\$filter=displayName eq '${LIST_KARREN}'" \
+  | jq -r '.value[0].id')
+LIST_COMP_ID=$(az rest --method GET \
+  --uri "https://graph.microsoft.com/v1.0/sites/${SITE_ID}/lists?\$filter=displayName eq '${LIST_COMPONENTEN}'" \
+  | jq -r '.value[0].id')
+echo "LIST_KARREN_ID: $LIST_KARREN_ID"
+echo "LIST_COMP_ID:   $LIST_COMP_ID"
+
+# === 5. App settings op de SWA zetten (worden door /api Functions gelezen) ===
+az staticwebapp appsettings set \
+  --name "$SWA" --resource-group "$RG" \
+  --setting-names \
+    GRAPH_TENANT_ID="$TENANT_ID" \
+    GRAPH_CLIENT_ID="$APP_ID" \
+    GRAPH_CLIENT_SECRET="$CLIENT_SECRET" \
+    SP_SITE_ID="$SITE_ID" \
+    SP_LIST_KARREN_ID="$LIST_KARREN_ID" \
+    SP_LIST_COMPONENTEN_ID="$LIST_COMP_ID"
+
+echo "✅ Klaar — push naar main, dan deployt de workflow de /api functions automatisch."
+```
+
+**Wat het script doet:**
+1. Maakt een aparte App Registration (los van de SWA-login-app) speciaal voor SharePoint-access
+2. Genereert een client secret met geldigheid 2 jaar
+3. Vraagt Microsoft Graph `Sites.Selected` permission aan + admin-consent (least privilege — geen toegang tot andere SP-sites)
+4. Grant deze App schrijftoegang op specifiek de juiste SharePoint-site
+5. Haalt site-ID en list-IDs op via Graph
+6. Zet 6 app settings op de SWA: tenant/client/secret + site/list-IDs
+
+**Vereiste rol**: Global Administrator of Application Administrator (voor admin-consent en site-grant).
+
+**Secret-rotatie**: na 2 jaar verloopt het secret. Herhaal stap 1 (`credential reset`) + stap 5 om alleen `GRAPH_CLIENT_SECRET` te vervangen.
+
 ### Toekomstige uitbreidingen (architectuur)
 
 De gekozen SWA Standard tier ondersteunt een groei-pad naar CRM:
-- **Azure Functions** (Consumption plan, pay-per-execution) voor REST API → multi-user data-sync
 - **Azure SQL Serverless** of **Cosmos DB** voor persistente data (regels, klanten, offertes, contacten)
 - **Azure Blob Storage** voor offerte-PDF's en attachments
 - **Microsoft Graph API** voor email-versturen via bestaande M365

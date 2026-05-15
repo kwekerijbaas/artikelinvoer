@@ -15,6 +15,7 @@
     { "route": "/.auth/*" },
     { "route": "/login", "rewrite": "/.auth/login/aad" },
     { "route": "/logout", "redirect": "/.auth/logout" },
+    { "route": "/api/*", "allowedRoles": ["authenticated"] },
     { "route": "/", "rewrite": "/opzet_afname.html", "allowedRoles": ["authenticated"] },
     { "route": "/*", "allowedRoles": ["authenticated"] }
   ],

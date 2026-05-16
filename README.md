@@ -203,46 +203,107 @@ echo "✅ Klaar — push naar main, dan deployt de workflow de /api functions au
 
 #### Hand-off prompt voor een Claude met browser/computer-use
 
-Kopieer onderstaande prompt in een Claude-sessie die je eigen browser kan besturen (computer-use of Playwright-MCP). De agent rondt de hele setup zelfstandig af — alle variabelen staan al ingevuld in het script.
+Kopieer onderstaande prompt in een Claude-sessie die je eigen browser kan besturen (computer-use of Playwright-MCP). De prompt schetst eerst het bredere plan zodat de agent snapt waarom hij dit doet en welke vervolgstappen er aankomen, en geeft daarna de concrete acties van vandaag.
 
 ```
-Doel: rond de SharePoint-sync backend voor de opzet/afname app af in Azure.
-Alle resources bestaan al; ik moet alleen een App Registration aanmaken
-met Sites.Selected, die schrijftoegang geven op één SP-site, en 6 app
-settings op de bestaande Static Web App zetten.
+=== CONTEXT ===
 
-Stappen:
-1. Open https://shell.azure.com in een nieuw tabblad. Mijn browser is al
-   ingelogd op de Azure-tenant. Als Cloud Shell vraagt om een storage
-   account te koppelen: klik "Create storage" (default opties zijn prima).
-2. Zorg dat de shell op Bash staat (linksboven in de Cloud Shell-toolbar).
-3. Open in een ander tabblad de README van deze repo en kopieer het bash-
-   blok onder "Backend setup (eenmalig) — SharePoint-sync via Azure
-   Functions" (start bij `RG="rg-opzet-afname-754-msw-prd"`). Alle
-   variabelen zijn al ingevuld voor deze tenant — niks aan jou vragen.
-4. Plak het volledige script in Cloud Shell en run het.
-5. Rapporteer:
-   - De waarde van $SITE_ID, $LIST_KARREN_ID, $LIST_COMP_ID
-   - Of `az staticwebapp appsettings set` succesvol was
-   - Eventuele fouten (vooral bij `permission admin-consent` of de
-     `sites/{id}/permissions` POST — die hebben Application Administrator
-     rechten nodig)
-6. Trigger daarna de GitHub Actions workflow opnieuw door op
-   github.com/kwekerijbaas/artikelinvoer/actions de laatste run te
-   "Re-run all jobs" te geven (alleen nodig als de laatste push al
-   gedeployd was vóórdat de app settings bestonden — anders deployt de
-   volgende push gewoon).
+Repo: github.com/kwekerijbaas/artikelinvoer (branch claude/fix-code-session-aAOlQ → PR #11)
+Productie-app: https://opzetafname.kwekerijbaas.nl
+Een verkoop/planning-app voor Kwekerijbaas, draait als Static Web App op
+Azure met Entra-ID-login. Op dit moment slaat de app alles in localStorage
+op — werkt prima single-user, maar verkoper/planner/inkoper kunnen elkaars
+wijzigingen niet zien.
 
-Verifieer tot slot door https://opzetafname.kwekerijbaas.nl te openen,
-in te loggen, de SharePoint-sync modal te openen → "Sync ingeschakeld"
-aan → "Nu ophalen" → er moet een toast komen met aantallen karren +
-componenten. Als dat lukt is de backend volledig live.
+=== EINDPLAATJE (waar we naartoe werken) ===
+
+De app groeit door naar een licht CRM/planning-systeem. De backend-keuze
+gaat in twee fases:
+
+  FASE A — NU: SharePoint Lists als opslag
+    Waarom: bestaat al, gratis bij M365, PowerBI kan er direct uit lezen,
+    geen DB-onderhoud, multi-user via Graph API. Goed genoeg voor ~paar
+    duizend regels en de huidige use-case.
+    Beperkingen waar we mee kunnen leven: ~5000 items per view zonder
+    indexing, geen relationele queries, Graph API ~200-500ms per call,
+    geen transacties (last-write-wins op updated_at — al ingebouwd).
+
+  FASE B — LATER (waarschijnlijk 6-12 maanden): Azure SQL Serverless of
+    Cosmos DB als de data-omvang of feature-set groeit (offertes versturen,
+    klant-pipeline, contact-history). De /api Functions blijven dan dezelfde
+    HTTP-contracten serveren (POST /api/karren/save, GET /api/karren/list),
+    alleen de implementatie wisselt van Graph-naar-SP → SQL/Cosmos. De
+    frontend hoeft dan niks aan te passen. Dat is precies waarom we nu al
+    via een /api gateway gaan en niet direct vanuit de browser naar
+    SharePoint praten.
+
+=== WAT AL KLAAR STAAT (in de repo, gepusht op branch) ===
+
+- /api/karren-list  → GET, leest beide SP-lists via Graph
+- /api/karren-save  → POST, upsert kar + replace componenten, stempelt
+                     updated_by uit SWA x-ms-client-principal
+- /api/shared/graph.js → Graph helper (client-credentials, token-cache)
+- staticwebapp.config.json → /api/* vereist Entra-login
+- Workflow → api_location: "api", deployt Functions mee
+- Frontend → sync-modal opgeschoond (geen webhook-URLs, geen handmatige
+  naam/email meer), gebruikt /api/karren/{save,list}
+- README → deze setup-bundel + Cloud Shell-script
+- SharePoint Lists bestaan al: Opzet_Afname + Opzet_Afname_Componenten
+  op https://kwekerijabaas.sharepoint.com/sites/opzetafname
+
+=== WAT JIJ NU MOET DOEN (Fase A activeren) ===
+
+Stap 0 (verificatie — vóór alles):
+  Open https://shell.azure.com (browser is ingelogd op de Azure-tenant).
+  Als Cloud Shell om een storage-account vraagt: "Create storage" → default
+  opties.
+  Run dan:
+      az staticwebapp list -o table
+  Noteer de exacte Name + ResourceGroup-kolom voor de opzet-afname SWA.
+  Mijn README heeft RG="rg-opzet-afname-754-msw-prd" en
+  SWA="swa-opzet-afname-754-msw-prd" maar dat zijn placeholders die niet
+  meer kloppen — vervang ze door wat az teruggeeft.
+
+Stap 1 (script draaien):
+  Open in een nieuw tabblad de README van de repo, sectie
+  "Backend setup (eenmalig)" → kopieer het bash-blok (start bij `RG=`).
+  Pas RG en SWA aan naar de waardes uit stap 0. SP_SITE_HOST en
+  SP_SITE_PATH staan al goed ingevuld (kwekerijabaas.sharepoint.com /
+  /sites/opzetafname — let op de extra 'a' in tenant-naam).
+  Plak en run het hele blok.
+
+Stap 2 (verifiëren):
+  Open https://opzetafname.kwekerijbaas.nl, log in.
+  Klik op het Sync-bolletje rechtsboven → "Sync ingeschakeld" aan →
+  "Opslaan" → "Nu ophalen". Er moet een toast komen met aantal karren +
+  componenten. Als de lists nog leeg zijn → 0 / 0 is OK, betekent
+  alleen dat de Graph-call werkt.
+  Daarna één testregel maken/opslaan → "Nu ophalen" → de regel moet
+  verschijnen na refresh.
+
+Stap 3 (rapporteren):
+  Stuur me terug:
+    - De juiste RG- en SWA-namen (voor README-update)
+    - $SITE_ID, $LIST_KARREN_ID, $LIST_COMP_ID uit het script
+    - Of `az staticwebapp appsettings set` zonder errors liep
+    - Bevestiging dat de "Nu ophalen"-toast verschijnt in de app
+    - Eventuele blockers (typisch: permission admin-consent of de
+      sites/{id}/permissions POST hebben Application Administrator rol
+      nodig — meld dat als 't faalt, dan vraag ik IT)
+
+NIET NU doen:
+  - Geen database aanmaken — fase B is voor later
+  - Geen wijzigingen aan de SWA-login App Registration (die heet
+    "opzet-afname-app", werkt al). Het script maakt een aparte
+    Registration ("opzet-afname-sp-sync") speciaal voor Graph-toegang.
+  - Geen branch mergen naar main vanuit jouw kant; ik review en merge.
 ```
 
 
 ### Toekomstige uitbreidingen (architectuur)
 
-De gekozen SWA Standard tier ondersteunt een groei-pad naar CRM:
+De gekozen SWA Standard tier ondersteunt een groei-pad naar CRM. De stap naar fase B (database) hoeft het frontend-contract niet te raken: zelfde `/api/karren/{save,list}`-endpoints, andere implementatie eronder.
+
 - **Azure SQL Serverless** of **Cosmos DB** voor persistente data (regels, klanten, offertes, contacten)
 - **Azure Blob Storage** voor offerte-PDF's en attachments
 - **Microsoft Graph API** voor email-versturen via bestaande M365

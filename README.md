@@ -57,9 +57,9 @@ Open `index.html` of `opzet_afname.html` in een browser. Geen server of installa
 
 ### Azure-resources
 
-- **Resource Group**: `rg-opzet-afname-754-msw-prd` (West Europe)
-- **Static Web App**: `swa-opzet-afname-754-msw-prd`
-- **Default URL**: `https://yellow-meadow-04b0a3c80.7.azurestaticapps.net`
+- **Resource Group**: `rg-opzet-afname-734-weu-prd` (West Europe)
+- **Static Web App**: `swa-opzet-afname-734-weu-prd`
+- **Default URL**: `https://yellow-meadow-04b0a3c03.7.azurestaticapps.net`
 - **Custom domain (na DNS)**: `https://opzetafname.kwekerijbaas.nl`
 - **Entra App Registration**: `opzet-afname-app` (single-tenant)
 
@@ -81,21 +81,21 @@ Push naar `main` → workflow `.github/workflows/azure-static-web-apps.yml` depl
    ```
    Type:    CNAME
    Naam:    opzetafname
-   Waarde:  yellow-meadow-04b0a3c80.7.azurestaticapps.net
+   Waarde:  yellow-meadow-04b0a3c03.7.azurestaticapps.net
    TTL:     3600
    ```
 2. In Azure:
    ```bash
    az staticwebapp hostname set \
-     --name swa-opzet-afname-754-msw-prd \
-     --resource-group rg-opzet-afname-754-msw-prd \
+     --name swa-opzet-afname-734-weu-prd \
+     --resource-group rg-opzet-afname-734-weu-prd \
      --hostname opzetafname.kwekerijbaas.nl
    ```
 3. Redirect-URI uitbreiden in Entra App Registration:
    ```bash
    az ad app update --id <ENTRA_CLIENT_ID> \
      --web-redirect-uris \
-     "https://yellow-meadow-04b0a3c80.7.azurestaticapps.net/.auth/login/aad/callback" \
+     "https://yellow-meadow-04b0a3c03.7.azurestaticapps.net/.auth/login/aad/callback" \
      "https://opzetafname.kwekerijbaas.nl/.auth/login/aad/callback"
    ```
 
@@ -128,8 +128,8 @@ De app schrijft elke kar via `/api/karren/save` (managed Function in dezelfde SW
 
 ```bash
 # === variabelen ===
-RG="rg-opzet-afname-754-msw-prd"
-SWA="swa-opzet-afname-754-msw-prd"
+RG="rg-opzet-afname-734-weu-prd"
+SWA="swa-opzet-afname-734-weu-prd"
 TENANT_ID="5026748d-0958-4629-a93b-b72015d1aa7f"
 APP_DISPLAY_NAME="opzet-afname-sp-sync"
 SP_SITE_HOST="kwekerijabaas.sharepoint.com"     # tenant-URL (let op: kwekerijabaas met extra 'a')
@@ -253,42 +253,37 @@ gaat in twee fases:
 
 === WAT JIJ NU MOET DOEN (Fase A activeren) ===
 
-Stap 0 (verificatie — vóór alles):
-  Open https://shell.azure.com (browser is ingelogd op de Azure-tenant).
-  Als Cloud Shell om een storage-account vraagt: "Create storage" → default
-  opties.
-  Run dan:
-      az staticwebapp list -o table
-  Noteer de exacte Name + ResourceGroup-kolom voor de opzet-afname SWA.
-  Mijn README heeft RG="rg-opzet-afname-754-msw-prd" en
-  SWA="swa-opzet-afname-754-msw-prd" maar dat zijn placeholders die niet
-  meer kloppen — vervang ze door wat az teruggeeft.
+Belangrijk vooraf: de SWA staat te deployen vanaf branch
+`claude/fix-code-session-aAOlQ` (niet main). De /api Functions zijn dus al
+live; we hoeven alleen nog de app settings te zetten zodat ze kunnen
+authenticeren bij Graph. Geen workflow-re-run nodig.
 
 Stap 1 (script draaien):
+  Open https://shell.azure.com (browser is ingelogd op de Azure-tenant).
+  Als Cloud Shell om een storage-account vraagt: "Create storage" → default
+  opties. Shell op Bash (default).
+
   Open in een nieuw tabblad de README van de repo, sectie
   "Backend setup (eenmalig)" → kopieer het bash-blok (start bij `RG=`).
-  Pas RG en SWA aan naar de waardes uit stap 0. SP_SITE_HOST en
-  SP_SITE_PATH staan al goed ingevuld (kwekerijabaas.sharepoint.com /
-  /sites/opzetafname — let op de extra 'a' in tenant-naam).
-  Plak en run het hele blok.
+  Alle variabelen staan al hard ingevuld voor deze tenant — niks aan
+  jou vragen. Plak en run het hele blok in Cloud Shell.
 
-Stap 2 (verifiëren):
+Stap 2 (verifiëren in de app):
   Open https://opzetafname.kwekerijbaas.nl, log in.
-  Klik op het Sync-bolletje rechtsboven → "Sync ingeschakeld" aan →
+  Klik op het "⚪ Sync"-bolletje rechtsboven → "Sync ingeschakeld" aan →
   "Opslaan" → "Nu ophalen". Er moet een toast komen met aantal karren +
   componenten. Als de lists nog leeg zijn → 0 / 0 is OK, betekent
   alleen dat de Graph-call werkt.
-  Daarna één testregel maken/opslaan → "Nu ophalen" → de regel moet
-  verschijnen na refresh.
+  Daarna één testregel maken in de app, opslaan (toast: "🟢 Sync OK") →
+  "Nu ophalen" → de regel moet ook nog verschijnen na een hard refresh.
 
 Stap 3 (rapporteren):
   Stuur me terug:
-    - De juiste RG- en SWA-namen (voor README-update)
     - $SITE_ID, $LIST_KARREN_ID, $LIST_COMP_ID uit het script
     - Of `az staticwebapp appsettings set` zonder errors liep
     - Bevestiging dat de "Nu ophalen"-toast verschijnt in de app
-    - Eventuele blockers (typisch: permission admin-consent of de
-      sites/{id}/permissions POST hebben Application Administrator rol
+    - Eventuele blockers (typisch: `permission admin-consent` of de
+      `sites/{id}/permissions` POST hebben Application Administrator rol
       nodig — meld dat als 't faalt, dan vraag ik IT)
 
 NIET NU doen:

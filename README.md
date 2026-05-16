@@ -132,8 +132,8 @@ RG="rg-opzet-afname-754-msw-prd"
 SWA="swa-opzet-afname-754-msw-prd"
 TENANT_ID="5026748d-0958-4629-a93b-b72015d1aa7f"
 APP_DISPLAY_NAME="opzet-afname-sp-sync"
-SP_SITE_HOST="<jouw-tenant>.sharepoint.com"     # bv. kwekerijbaas.sharepoint.com
-SP_SITE_PATH="/sites/<sitenaam>"                # bv. /sites/Kwekerij
+SP_SITE_HOST="kwekerijabaas.sharepoint.com"     # tenant-URL (let op: kwekerijaabaas met extra 'a')
+SP_SITE_PATH="/sites/opzetafname"               # site waar Opzet_Afname-lists op staan
 LIST_KARREN="Opzet_Afname"
 LIST_COMPONENTEN="Opzet_Afname_Componenten"
 
@@ -203,7 +203,7 @@ echo "✅ Klaar — push naar main, dan deployt de workflow de /api functions au
 
 #### Hand-off prompt voor een Claude met browser/computer-use
 
-Kopieer onderstaande prompt in een Claude-sessie die je eigen browser kan besturen (computer-use of Playwright-MCP). De agent rondt de hele setup zelfstandig af en hoeft niks aan jou te vragen behalve de twee SP-variabelen.
+Kopieer onderstaande prompt in een Claude-sessie die je eigen browser kan besturen (computer-use of Playwright-MCP). De agent rondt de hele setup zelfstandig af — alle variabelen staan al ingevuld in het script.
 
 ```
 Doel: rond de SharePoint-sync backend voor de opzet/afname app af in Azure.
@@ -218,19 +218,16 @@ Stappen:
 2. Zorg dat de shell op Bash staat (linksboven in de Cloud Shell-toolbar).
 3. Open in een ander tabblad de README van deze repo en kopieer het bash-
    blok onder "Backend setup (eenmalig) — SharePoint-sync via Azure
-   Functions" (start bij `RG="rg-opzet-afname-754-msw-prd"`).
-4. Voor je het in Cloud Shell plakt: vraag mij om de waarden van
-     SP_SITE_HOST   (bv. kwekerijbaas.sharepoint.com)
-     SP_SITE_PATH   (bv. /sites/Kwekerij)
-   en vul ze in op de juiste regels van het script.
-5. Plak het volledige script in Cloud Shell en run het.
-6. Rapporteer:
+   Functions" (start bij `RG="rg-opzet-afname-754-msw-prd"`). Alle
+   variabelen zijn al ingevuld voor deze tenant — niks aan jou vragen.
+4. Plak het volledige script in Cloud Shell en run het.
+5. Rapporteer:
    - De waarde van $SITE_ID, $LIST_KARREN_ID, $LIST_COMP_ID
    - Of `az staticwebapp appsettings set` succesvol was
    - Eventuele fouten (vooral bij `permission admin-consent` of de
      `sites/{id}/permissions` POST — die hebben Application Administrator
      rechten nodig)
-7. Trigger daarna de GitHub Actions workflow opnieuw door op
+6. Trigger daarna de GitHub Actions workflow opnieuw door op
    github.com/kwekerijbaas/artikelinvoer/actions de laatste run te
    "Re-run all jobs" te geven (alleen nodig als de laatste push al
    gedeployd was vóórdat de app settings bestonden — anders deployt de

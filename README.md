@@ -201,6 +201,48 @@ echo "✅ Klaar — push naar main, dan deployt de workflow de /api functions au
 
 **Secret-rotatie**: na 2 jaar verloopt het secret. Herhaal stap 1 (`credential reset`) + stap 5 om alleen `GRAPH_CLIENT_SECRET` te vervangen.
 
+#### Hand-off prompt voor een Claude met browser/computer-use
+
+Kopieer onderstaande prompt in een Claude-sessie die je eigen browser kan besturen (computer-use of Playwright-MCP). De agent rondt de hele setup zelfstandig af en hoeft niks aan jou te vragen behalve de twee SP-variabelen.
+
+```
+Doel: rond de SharePoint-sync backend voor de opzet/afname app af in Azure.
+Alle resources bestaan al; ik moet alleen een App Registration aanmaken
+met Sites.Selected, die schrijftoegang geven op één SP-site, en 6 app
+settings op de bestaande Static Web App zetten.
+
+Stappen:
+1. Open https://shell.azure.com in een nieuw tabblad. Mijn browser is al
+   ingelogd op de Azure-tenant. Als Cloud Shell vraagt om een storage
+   account te koppelen: klik "Create storage" (default opties zijn prima).
+2. Zorg dat de shell op Bash staat (linksboven in de Cloud Shell-toolbar).
+3. Open in een ander tabblad de README van deze repo en kopieer het bash-
+   blok onder "Backend setup (eenmalig) — SharePoint-sync via Azure
+   Functions" (start bij `RG="rg-opzet-afname-754-msw-prd"`).
+4. Voor je het in Cloud Shell plakt: vraag mij om de waarden van
+     SP_SITE_HOST   (bv. kwekerijbaas.sharepoint.com)
+     SP_SITE_PATH   (bv. /sites/Kwekerij)
+   en vul ze in op de juiste regels van het script.
+5. Plak het volledige script in Cloud Shell en run het.
+6. Rapporteer:
+   - De waarde van $SITE_ID, $LIST_KARREN_ID, $LIST_COMP_ID
+   - Of `az staticwebapp appsettings set` succesvol was
+   - Eventuele fouten (vooral bij `permission admin-consent` of de
+     `sites/{id}/permissions` POST — die hebben Application Administrator
+     rechten nodig)
+7. Trigger daarna de GitHub Actions workflow opnieuw door op
+   github.com/kwekerijbaas/artikelinvoer/actions de laatste run te
+   "Re-run all jobs" te geven (alleen nodig als de laatste push al
+   gedeployd was vóórdat de app settings bestonden — anders deployt de
+   volgende push gewoon).
+
+Verifieer tot slot door https://opzetafname.kwekerijbaas.nl te openen,
+in te loggen, de SharePoint-sync modal te openen → "Sync ingeschakeld"
+aan → "Nu ophalen" → er moet een toast komen met aantallen karren +
+componenten. Als dat lukt is de backend volledig live.
+```
+
+
 ### Toekomstige uitbreidingen (architectuur)
 
 De gekozen SWA Standard tier ondersteunt een groei-pad naar CRM:

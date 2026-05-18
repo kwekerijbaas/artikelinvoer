@@ -64,6 +64,8 @@ function fieldsToKar(f) {
     opzetstuk: !!f.opzetstuk,
     sealen_strappen: !!f.sealen_strappen,
     opmerking: f.opmerking || '',
+    copied_from: f.copied_from || '',
+    copied_at: f.copied_at || '',
     updated_at: f.updated_at || '',
     updated_by: f.updated_by || ''
   };

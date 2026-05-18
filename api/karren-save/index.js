@@ -111,6 +111,10 @@ function sanitizeKar(k, overrides) {
     sealen_strappen: !!k.sealen_strappen,
     opmerking: str(k.opmerking)
   };
+  // Alleen meesturen wanneer ingevuld — als de SP-kolommen nog niet bestaan
+  // blijven saves van niet-gekopieerde regels gewoon werken.
+  if (k.copied_from) out.copied_from = str(k.copied_from);
+  if (k.copied_at) out.copied_at = str(k.copied_at);
   return Object.assign(out, overrides);
 }
 

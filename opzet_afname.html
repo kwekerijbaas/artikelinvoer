@@ -1073,24 +1073,14 @@ let editingId = null;
 const selectedIds = new Set();
 let sortCol = 'week', sortAsc = true;
 
-// Lokale tracking van gekopieerde regels — overleeft localStorage refresh.
-// TODO: voor cross-user zichtbaarheid moeten copied_from + copied_at als
-// kolommen worden toegevoegd aan SharePoint-list Opzet_Afname, en
-// meegenomen in api/karren-{list,save}/index.js. Nu local-only.
-let copyMeta = {}; // { regel_id: { from: <other_id>, at: <iso> } }
-try { copyMeta = JSON.parse(localStorage.getItem('copyMeta') || '{}'); } catch(e) {}
-function persistCopyMeta() {
-  try { localStorage.setItem('copyMeta', JSON.stringify(copyMeta)); } catch(e) {}
-}
-function markAsCopy(newId, fromId) {
-  if (!newId || !fromId || newId === fromId) return;
-  copyMeta[newId] = { from: fromId, at: new Date().toISOString() };
-  persistCopyMeta();
-}
+// Gekopieerde regels → 📋 icoontje vóór de status-badge.
+// copied_from + copied_at staan direct op het regel-object zodat ze
+// meelopen in de SP-sync (kolommen 'copied_from' Single line of text
+// en 'copied_at' Date and Time op Opzet_Afname-list — zie README).
 function copyIconHtml(r) {
-  const m = copyMeta[r.id]; if (!m) return '';
-  const fromShort = String(m.from || '').slice(0, 8);
-  const dt = m.at ? new Date(m.at).toLocaleString('nl-NL', {dateStyle:'short', timeStyle:'short'}) : '';
+  if (!r.copied_from) return '';
+  const fromShort = String(r.copied_from).slice(0, 8);
+  const dt = r.copied_at ? new Date(r.copied_at).toLocaleString('nl-NL', {dateStyle:'short', timeStyle:'short'}) : '';
   return '<span class="copy-icon" title="Gekopieerd van kar '+esc(fromShort)+(dt?' op '+esc(dt):'')+'">📋</span>';
 }
 let pickedCopySourceId = null; // gezet door pickCopy(), gelezen door saveOrder()
@@ -1208,6 +1198,8 @@ function buildSpPayload(r) {
     karposter: !!r.karposter, karsticker: !!r.karsticker,
     opzetstuk: !!r.opzetstuk, sealen_strappen: !!r.sealen_strappen,
     opmerking: r.opmerking||'',
+    copied_from: r.copied_from || '',
+    copied_at: r.copied_at || '',
     updated_at: new Date().toISOString()
     // updated_by wordt server-side gestempeld door /api/karren/save
   };
@@ -1351,6 +1343,8 @@ function spItemToRegel(spKar, comps) {
     opzetstuk: !!spKar.opzetstuk,
     sealen_strappen: !!spKar.sealen_strappen,
     opmerking: spKar.opmerking||'',
+    copied_from: spKar.copied_from||'',
+    copied_at: spKar.copied_at||'',
     updated_at: spKar.updated_at||'',
     componenten: (comps||[]).map(c => ({
       artikelnr: c.artikelnr||'', naam: c.naam||'',
@@ -2319,15 +2313,12 @@ function cloneRegel(r, overrides) {
 }
 function bulkDuplicate() {
   if (!selectedIds.size) return;
+  const now = new Date().toISOString();
   const sources = regels.filter(r => selectedIds.has(r.id));
-  const copies = sources.map(r => {
-    const c = cloneRegel(r, {id: newId(), status: 'V'});
-    markAsCopy(c.id, r.id);
-    return c;
-  });
+  const copies = sources.map(r => cloneRegel(r, {id: newId(), status: 'V', copied_from: r.id, copied_at: now}));
   regels = regels.concat(copies);
   selectedIds.clear();
-  copies.forEach(c => selectedIds.add(c.id));
+  copies.forEach(c => { selectedIds.add(c.id); syncRegelToSp(c, { silent: true }); });
   renderTable();
   toast(copies.length + ' regels gedupliceerd (status: aanvraag)');
 }
@@ -2349,9 +2340,9 @@ function deleteRow(id) {
 function duplicateRow(id) {
   const r = regels.find(x => x.id === id);
   if (!r) return;
-  const copy = cloneRegel(r, {id: newId(), status: 'V'});
-  markAsCopy(copy.id, r.id);
+  const copy = cloneRegel(r, {id: newId(), status: 'V', copied_from: r.id, copied_at: new Date().toISOString()});
   regels.push(copy);
+  syncRegelToSp(copy, { silent: true });
   renderTable();
   toast('Regel gedupliceerd (status: aanvraag)');
 }
@@ -3382,12 +3373,13 @@ function saveOrder() {
     }
   } else {
     r.id = newId();
-    regels.push(r);
-    savedRegel = r;
     if (pickedCopySourceId) {
-      markAsCopy(r.id, pickedCopySourceId);
+      r.copied_from = pickedCopySourceId;
+      r.copied_at = new Date().toISOString();
       pickedCopySourceId = null;
     }
+    regels.push(r);
+    savedRegel = r;
     toast('Regel toegevoegd');
   }
   // Auto-sync naar SharePoint (silent — failures gaan in wachtrij)

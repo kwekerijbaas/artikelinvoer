@@ -186,8 +186,42 @@ az staticwebapp appsettings set \
     SP_LIST_KARREN_ID="$LIST_KARREN_ID" \
     SP_LIST_COMPONENTEN_ID="$LIST_COMP_ID"
 
+# === 6. Twee extra kolommen op de kar-lijst voor kopie-tracking ===
+# (📋-icoontje vóór status-badge, cross-user zichtbaar wie wat heeft gekopieerd)
+az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/sites/${SITE_ID}/lists/${LIST_KARREN_ID}/columns" \
+  --headers "Content-Type=application/json" \
+  --body '{"name":"copied_from","text":{"allowMultipleLines":false}}' \
+  || echo "  ⚠ copied_from-kolom: bestaat al of permissie ontbreekt — handmatig toevoegen via SP-UI"
+az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/sites/${SITE_ID}/lists/${LIST_KARREN_ID}/columns" \
+  --headers "Content-Type=application/json" \
+  --body '{"name":"copied_at","dateTime":{"format":"dateTime"}}' \
+  || echo "  ⚠ copied_at-kolom: bestaat al of permissie ontbreekt — handmatig toevoegen via SP-UI"
+
 echo "✅ Klaar — push naar main, dan deployt de workflow de /api functions automatisch."
 ```
+
+**Upgrade: alleen de kopie-tracking-kolommen toevoegen** (als je de bundel al eerder gedraaid hebt):
+
+```bash
+# Vul SITE_ID en LIST_KARREN_ID in uit de output van de oorspronkelijke setup.
+SITE_ID="<value from previous run>"
+LIST_KARREN_ID="<value from previous run>"
+
+az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/sites/${SITE_ID}/lists/${LIST_KARREN_ID}/columns" \
+  --headers "Content-Type=application/json" \
+  --body '{"name":"copied_from","text":{"allowMultipleLines":false}}'
+az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/sites/${SITE_ID}/lists/${LIST_KARREN_ID}/columns" \
+  --headers "Content-Type=application/json" \
+  --body '{"name":"copied_at","dateTime":{"format":"dateTime"}}'
+```
+
+Als beide commando's HTTP 401/403 geven (geen permissie om columns aan te maken via Graph): voeg de twee kolommen handmatig toe in SharePoint-UI op de `Opzet_Afname`-list:
+- `copied_from` — Single line of text
+- `copied_at` — Date and time
 
 **Wat het script doet:**
 1. Maakt een aparte App Registration (los van de SWA-login-app) speciaal voor SharePoint-access
